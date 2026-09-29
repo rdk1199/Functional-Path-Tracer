@@ -1,9 +1,12 @@
+open Vector
+
 type triangle = {
   p1 : vector3;
   p2 : vector3;
   p3 : vector3;
 }
 
+(** Axis aligned bounding box*)
 type aabb = {
   x_min : float;
   x_max : float;
