@@ -1,2 +1,3 @@
  (library
-  (name IO))
+  (name IO)
+  (libraries ImageLib))
