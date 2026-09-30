@@ -7,7 +7,6 @@ type camera = {
 
   focal_length : float;
   x_fov : float;
-  y_fov : float;
 
   (**image resolution in pixels*)
   res_x : int;
@@ -20,19 +19,18 @@ type camera = {
 
 (**camera constructor that fills in all the necessary values*)
 let create_camera position forward up res_x res_y focal_length x_fov =
+  let normalized_forward = Math.Vector.normalized forward in
+  let normalized_up = Math.Vector.normalized up in
   let aspect_ratio = (float_of_int res_x) /. (float_of_int res_y) in
-  let y_fov = x_fov /. aspect_ratio in
-  let screen_width = (2. *. focal_length) /. (tan (x_fov /. 2.)) in 
-  let screen_height = (2. *. focal_length) /. (tan (y_fov /. 2.)) in 
-  
+  let screen_width = (2. *. focal_length) /. (tan (Math.Util.deg_to_rad x_fov /. 2.)) in 
+  let screen_height = screen_width /. aspect_ratio in   
   {
    position = position;
-   forward = forward;
-   up = up;
-   right = Math.Vector.cross_product forward up;
+   forward = normalized_forward;
+   up = normalized_up;
+   right = Math.Vector.cross_product normalized_forward normalized_up;
    focal_length = focal_length;
    x_fov = x_fov;
-   y_fov = y_fov;
    res_x = res_x;
    res_y = res_y;
    screen_width = screen_width;

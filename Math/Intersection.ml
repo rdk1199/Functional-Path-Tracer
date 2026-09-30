@@ -22,7 +22,6 @@ let ray_intersects_sphere ray sphere =
     else
       let t1 = ((-.dir_dot_offset) -. sqrt (discriminant)) /. dir_sq_mag in
       let t2 = ((-.dir_dot_offset) +. sqrt (discriminant)) /. dir_sq_mag in
-      let () = Logs.info (fun m-> m  "t1: %f t2: %f \n" t1 t2) in
       if t1 >= 0. then
         {hit = true; t = t1}
       else if t2 >= 0. then
