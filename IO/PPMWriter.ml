@@ -1,26 +1,31 @@
-let write_file filename content = 
-  Out_channel.with_open_text filename (fun oc -> Out_channel.output_string oc content)
+let append_to_file out_channel content = 
+  output_string out_channel content
 
 (**create the ppm file format header string*)
-let ppm_header (image : ImageLib.Image.image) =
+let ppm_header (image : Image.image) =
   "P3\n" ^ 
   string_of_int(image.width) ^ " " ^ string_of_int(image.height) ^ "\n" ^
   "255\n"
 
-let rec string_of_image_rec image_string x y (image : ImageLib.Image.image) =
-  let open ImageLib.Color in
-  let open ImageLib.Image in
+let rec image_to_ppm_rec x y (image : Image.image) out_channel =
+  let open RenderingLib.Color in
+  let open Image in
   if y >= image.height then
     (**done*)
-    image_string
-  else if x >= image.height then
+    ()
+  else if x >= image.width then
     (**done with current row - onto the next*)
-    string_of_image_rec (image_string ^ "\n") 0 (y+1) image
-  else
-    string_of_image_rec (image_string ^ (string_of_int_color (round_color (get_pixel image x y))) ^ " ") (x + 1) y image
-
-let string_of_image image =
-  string_of_image_rec "" 0 0 image
+    image_to_ppm_rec 0 (y+1) image out_channel
+  else begin
+    append_to_file out_channel ((string_of_int_color (round_color (get_pixel image x y))) ^ " ");
+    image_to_ppm_rec (x+1) y image out_channel
+  end
 
 let image_to_ppm image filename =
-  write_file filename ((ppm_header image) ^ (string_of_image image))
+  Out_channel.with_open_text filename (fun oc -> 
+  Logs.info (fun m -> m "created image file!");
+  append_to_file oc (ppm_header image);
+  image_to_ppm_rec 0 0 image oc;
+  flush oc;
+  close_out oc)
+  

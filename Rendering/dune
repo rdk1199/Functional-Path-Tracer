@@ -1,4 +1,4 @@
   
  (library
-  (name ImageLib)
+  (name RenderingLib)
   (libraries math logs logs.fmt fmt))
