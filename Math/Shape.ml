@@ -1,9 +1,8 @@
-open Vector
 
 type triangle = {
-  p1 : vector3;
-  p2 : vector3;
-  p3 : vector3;
+  p1 : Vector.vector3;
+  p2 : Vector.vector3;
+  p3 : Vector.vector3;
 }
 
 (** Axis aligned bounding box*)
@@ -17,6 +16,6 @@ type aabb = {
 }
 
 type sphere = {
-  center : vector3;
+  center : Vector.vector3;
   radius : float;
 }
