@@ -8,7 +8,7 @@ let ppm_header (image : Image.image) =
   "255\n"
 
 let rec image_to_ppm_rec x y (image : Image.image) out_channel =
-  let open RenderingLib.Color in
+  let open Math.Color in
   let open Image in
   if y >= image.height then
     (**done*)

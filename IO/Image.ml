@@ -1,4 +1,4 @@
-open RenderingLib.Color
+open Math.Color
 
 (**flattened 2D matrix of colors*)
 type image = {
