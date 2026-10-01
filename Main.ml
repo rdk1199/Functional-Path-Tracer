@@ -42,20 +42,20 @@ let sphere_radius = 1.0
 let sphere_1 = {center = sphere_center; radius = sphere_radius}
 
 let sphere_2_center = {x = 1.0; y = 5.5; z = 0.5;}
-let sphere_2_radius = 0.6
+let sphere_2_radius = 1.0
 
 let sphere_2 = {center = sphere_2_center; radius = sphere_2_radius}
 
 let sphere_3_center = {x = -1.0; y = 7.0; z = -0.5;}
-let sphere_3_radius = 1.25
+let sphere_3_radius = 1.0
 
 let sphere_3 = {center = sphere_3_center; radius = sphere_3_radius;}
 let spheres = [sphere_1; sphere_2; sphere_3]
 
 (**define materials*)
 let red_material = {base_color = {r = 255.0; g = 0.0; b = 0.0;}; shininess = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 0.0; b = 255.0;}; shininess = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 255.0; b = 0.0;}; shininess = 0.0;}
+let green_material = {base_color = {r = 0.0; g = 255.0; b = 0.0;}; shininess = 0.0;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 255.0;}; shininess = 0.0;}
 let materials = [red_material; green_material; blue_material]
 
 let sphere_materials = [1; 0; 2]
@@ -76,13 +76,10 @@ let rec draw_scene_rec camera scene x y image =
   else if x >= camera.res_x then
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
-  else
-    let hit_record = ray_intersects_scene (get_camera_ray x y camera) scene in
-    if hit_record.hit then
-      set_pixel image ((List.nth materials hit_record.material_index).base_color) x y
-    else
-      set_pixel image black x y;
+  else begin
+    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y) x y;
     draw_scene_rec camera scene (x+1) y image
+  end
 
 let draw_scene camera scene image =
   draw_scene_rec camera scene 0 0 image
