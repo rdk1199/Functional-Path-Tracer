@@ -31,10 +31,6 @@ let fov = 90.0
 
 let camera = create_camera camera_pos camera_forward camera_up width height focal_length fov
 
-let () = print_endline (string_of_float (camera.screen_width))
-
-let () = print_endline (string_of_vector3 ((get_camera_ray 0 0 camera).direction))
-
 (**define spheres*)
 let sphere_center = {x = 0.0; y = 4.0; z = 0.0;}
 let sphere_radius = 1.0
@@ -53,18 +49,26 @@ let sphere_3 = {center = sphere_3_center; radius = sphere_3_radius;}
 let spheres = [sphere_1; sphere_2; sphere_3]
 
 (**define materials*)
-let red_material = {base_color = {r = 255.0; g = 0.0; b = 0.0;}; shininess = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 255.0; b = 0.0;}; shininess = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 255.0;}; shininess = 0.0;}
+let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.0;}
+let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.0;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.0;}
 let materials = [red_material; green_material; blue_material]
 
 let sphere_materials = [1; 0; 2]
 
+let light_1 = {
+  color = {r = 1.0; g = 1.0; b=1.0};
+  intensity = 10.0;
+  position = {x = -1.0; y = 0.0; z = 1.5;};
+}
+
 let scene = {
   spheres = spheres;
   sphere_materials = sphere_materials;
-  lights = [];
+  lights = [light_1];
   materials = materials;
+  background_color = {r = 0.2; g = 0.2; b = 0.2};
+  ambient_color = {r = 0.1; g = 0.1; b = 0.1}
 }
 
 let () = print_endline "defined camera and scene"

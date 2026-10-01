@@ -10,6 +10,17 @@ type int_color = {
   b : int;
 }
 
+(**add colors*)
+let (|+|) (c1:color) (c2:color) : color = {r = c1.r +. c2.r; g = c1.g +. c2.g; b = c1.b +. c2.b}
+
+(**component-wise multiply colors*)
+let (|*|) (c1:color) (c2:color) : color = {r = c1.r *. c2.r; g = c1.g *. c2.g; b = c1.b *. c2.b}
+
+(**multiply color by scalar*)
+let (|*.|) (k:float) (c:color) : color = {r = k *. c.r; g = k *. c.g; b = k *. c.b}
+
+(**component-wise multiply colors*)
+
 (** turn color to int_color for writing to file*)
 let round_color (color : color) = {r = int_of_float(Float.round color.r); 
                          g = int_of_float(Float.round color.g);

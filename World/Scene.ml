@@ -4,12 +4,15 @@ type scene = {
   sphere_materials : int list;
   lights : Light.point_light list;
   materials : Material.material list;
+  background_color : Math.Color.color;
+  ambient_color : Math.Color.color;
 }
 
 (**record for information about where a ray hits a scene*)
 type scene_hit_record = {
   hit : bool;
   t : float;
+  point : Math.Vector.vector3;
   normal : Math.Vector.vector3;
   material_index : int;
 }
@@ -27,6 +30,7 @@ let rec ray_intersects_scene_rec ray scene i hit_record =
       {
         hit = true; 
         t = sphere_hit_record.t; 
+        point = Math.Vector.(ray.origin +| (sphere_hit_record.t *.| ray.direction));
         normal = sphere_hit_record.normal;
         material_index = List.nth scene.sphere_materials i;
       } in
@@ -38,5 +42,9 @@ let rec ray_intersects_scene_rec ray scene i hit_record =
 
 let ray_intersects_scene ray scene = 
   let open Math.Vector in
-  let default_scene_hit = {hit = false; t = 0.0; normal = {x = 0.0; y =0.0; z=0.0}; material_index = 0} in
+  let default_scene_hit = {hit = false; 
+                           t = 0.0; 
+                           point = {x = 0.0; y = 0.0; z=0.0}; 
+                           normal = {x = 0.0; y =0.0; z=0.0}; 
+                           material_index = 0} in
   ray_intersects_scene_rec ray scene 0 default_scene_hit

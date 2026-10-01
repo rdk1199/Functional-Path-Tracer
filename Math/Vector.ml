@@ -27,3 +27,7 @@ let normalized v = (1. /. (magnitude v)) *.| v
 let cross_product v1 v2 = {x = v1.y *. v2.z -. v1.z *. v2.y;
                            y = v1.z *. v2.x -. v1.x *. v2.z;
                            z = v1.x *. v2.y -. v1.y *. v2.x}
+
+let cos_angle_between v1 v2 = (dot v1 v2) /. ((magnitude v1) *. (magnitude v2))
+
+let angle_between_in_deg v1 v2 = Util.rad_to_deg (acos (cos_angle_between v1 v2))
