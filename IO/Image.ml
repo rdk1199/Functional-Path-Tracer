@@ -14,7 +14,8 @@ let get_flattened_pixel_index width x y =
 let get_pixel image x y =
   image.data.(get_flattened_pixel_index image.width x y)
 
-(**non-functional! set pixel (x,y) to value color*)
+(**non-functional! mutating state! set pixel (x,y) to value color*)
+(** TODO: this probably isn't even necessary as we could use a list *)
 let set_pixel image color x y =
   image.data.(get_flattened_pixel_index image.width x y) <- color
 

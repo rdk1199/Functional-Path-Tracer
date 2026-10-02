@@ -69,11 +69,27 @@ let rec compute_ray_color ray scene color depth =
           if material.transparency > 0.0 then
             let new_refractive_index = if ray.Math.Ray.inside then 1.0 else material.refractive_index in
             let refracted = Math.Geometry.refract ray.direction hit_record.normal ray.refractive_index new_refractive_index in
+            let total_internal_reflection = (Math.Vector.dot refracted hit_record.normal > 0.0) in
             let refract_ray = {
-              Math.Ray.origin = Math.Vector.(hit_record.point -| Math.Util.epsilon *.| hit_record.normal);
+              Math.Ray.origin = if total_internal_reflection then
+                                  Math.Vector.(hit_record.point +| Math.Util.epsilon *.| hit_record.normal)
+                                else
+                                  Math.Vector.(hit_record.point -| Math.Util.epsilon *.| hit_record.normal);
               Math.Ray.direction = refracted;
-              Math.Ray.refractive_index = if ray.Math.Ray.inside then 1.0 else material.refractive_index;
-              Math.Ray.inside = if ray.Math.Ray.inside then false else true
+              Math.Ray.refractive_index = if ray.Math.Ray.inside then
+                                            if total_internal_reflection then 
+                                              ray.refractive_index 
+                                            else 
+                                              1.0
+                                          else
+                                            material.refractive_index;
+              Math.Ray.inside = if ray.Math.Ray.inside then
+                                  if total_internal_reflection then
+                                    true
+                                  else
+                                    false
+                                else
+                                  true;
             }
             in
             Math.Color.(material.transparency |*.| (compute_ray_color refract_ray scene Math.Color.black (depth-1)));
