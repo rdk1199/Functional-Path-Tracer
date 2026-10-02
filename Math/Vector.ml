@@ -16,6 +16,15 @@ let (-|) v1 v2 = {x = v1.x -. v2.x; y = v1.y -. v2.y; z = v1.z -. v2.z}
 (** multiply by scalar*)
 let ( *.| ) c v = {x = c *. v.x; y = c *. v.y; z = c *. v.z}
 
+(**negate vector*)
+let ( ~-| ) v = -1.0 *.| v
+
+let zero_vec = {
+    x = 0.0; 
+    y = 0.0; 
+    z = 0.0
+}
+
 let dot v1 v2 = v1.x *. v2.x +. v1.y *. v2.y +. v1.z *. v2.z
 
 let square_magnitude v = dot v v

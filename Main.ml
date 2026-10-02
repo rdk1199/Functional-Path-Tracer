@@ -89,7 +89,7 @@ let rec draw_scene_rec camera scene x y image =
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
   else begin
-    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 5) x y;
+    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 20) x y;
     draw_scene_rec camera scene (x+1) y image
   end
 
