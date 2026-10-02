@@ -56,5 +56,9 @@ let get_screen_point x y camera =
 (**get ray from focal point to pixel x,y on screen*)
 let get_camera_ray x y camera =
   let open Math.Vector in
-  let open Math.Ray in
-  {origin = camera.position; direction = (get_screen_point x y camera) -| camera.position;}
+  let open Math.Ray in {
+    origin = camera.position;
+    direction = (get_screen_point x y camera) -| camera.position;
+    refractive_index = 1.0;
+    inside = false;
+  }

@@ -27,6 +27,9 @@ let clamp_color (color : color) : color = {
   b = Util.clamp color.b 0.0 255.0;
 }
 
+let string_of_color (color : color) =
+  string_of_float(color.r) ^ " " ^ string_of_float(color.g) ^ " " ^ string_of_float(color.b) 
+
 (** turn color to int_color for writing to file*)
 let round_color (color : color) = 
   let clamped_color = clamp_color color in

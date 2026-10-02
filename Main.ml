@@ -49,16 +49,20 @@ let sphere_3 = {center = sphere_3_center; radius = sphere_3_radius;}
 
 let ground = {center = {x = 0.0; y = 1.0; z = -2000.0}; radius = 1999.0}
 
-let spheres = [sphere_1; sphere_2; sphere_3; ground]
+
+let glass_ball = {center = {x = 0.0; y = 0.5; z = 0.0}; radius = 1.0;}
+
+let spheres = [sphere_1; sphere_2; sphere_3; ground; glass_ball]
 
 (**define materials*)
-let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5;}
-let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5;}
-let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5;}
-let materials = [red_material; green_material; blue_material; grass_material]
+let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let glass_material = {base_color = {r = 0.0; g = 0.0; b = 0.0}; shininess = 0.0; refractive_index = 1.2; transparency = 1.0;}
+let materials = [red_material; green_material; blue_material; grass_material; glass_material]
 
-let sphere_materials = [1; 0; 2; 3]
+let sphere_materials = [1; 0; 2; 3; 4]
 
 let light_1 = {
   color = {r = 1.0; g = 1.0; b=1.0};
@@ -85,13 +89,14 @@ let rec draw_scene_rec camera scene x y image =
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
   else begin
-    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 2) x y;
+    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 5) x y;
     draw_scene_rec camera scene (x+1) y image
   end
 
 let draw_scene camera scene image =
   draw_scene_rec camera scene 0 0 image
 
+(*let () = print_endline (string_of_color (RenderingLib.Render.compute_pixel camera scene 800 450 10))*)
 
 let _  = draw_scene camera scene test_image
 

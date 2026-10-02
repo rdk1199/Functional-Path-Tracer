@@ -27,10 +27,14 @@ let ray_intersects_sphere ray sphere =
       let t2 = ((-.dir_dot_offset) +. sqrt (discriminant)) /. dir_sq_mag in
       if t1 >= 0. then
         let hit_point = ray.Ray.origin +| (t1 *.| ray.Ray.direction) in
-        {hit = true; t = t1; point = hit_point; normal = (normalized (hit_point -| sphere.Shape.center))}
+        let outer_normal = normalized (hit_point -| sphere.Shape.center) in
+        let hit_normal = if dot outer_normal ray.Ray.direction < 0. then outer_normal else -.1.0 *.| outer_normal in
+        {hit = true; t = t1; point = hit_point; normal = hit_normal}
       else if t2 >= 0. then
         let hit_point = ray.Ray.origin +| (t2 *.| ray.Ray.direction) in
-        {hit = true; t = t2; point = hit_point; normal = (normalized (hit_point -| sphere.Shape.center))}
+        let outer_normal = normalized (hit_point -| sphere.Shape.center) in
+        let hit_normal = if dot outer_normal ray.Ray.direction < 0. then outer_normal else -.1.0 *.| outer_normal in
+        {hit = true; t = t2; point = hit_point; normal = hit_normal}
       else
         {hit = false; t = 0.; point = zero_vec; normal = zero_vec}
 
