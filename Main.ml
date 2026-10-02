@@ -23,7 +23,7 @@ let height = 900
 
 let test_image = IO.Image.create_image width height red
 
-let camera_pos = {x = 0.0; y = 0.0; z = 0.0;}
+let camera_pos = {x = 0.0; y = -5.0; z = 0.0;}
 let camera_forward = {x = 0.0; y = 1.0; z = 0.0;}
 let camera_up = {x = 0.0; y = 0.0; z = 1.0;}
 let focal_length = 1.0
@@ -37,29 +37,33 @@ let sphere_radius = 1.0
 
 let sphere_1 = {center = sphere_center; radius = sphere_radius}
 
-let sphere_2_center = {x = 1.0; y = 5.5; z = 0.5;}
+let sphere_2_center = {x = 2.2; y = 4.5; z = 0.0;}
 let sphere_2_radius = 1.0
 
 let sphere_2 = {center = sphere_2_center; radius = sphere_2_radius}
 
-let sphere_3_center = {x = -1.0; y = 7.0; z = -0.5;}
+let sphere_3_center = {x = -2.2; y = 4.0; z = 0.0;}
 let sphere_3_radius = 1.0
 
 let sphere_3 = {center = sphere_3_center; radius = sphere_3_radius;}
-let spheres = [sphere_1; sphere_2; sphere_3]
+
+let ground = {center = {x = 0.0; y = 1.0; z = -2000.0}; radius = 1999.0}
+
+let spheres = [sphere_1; sphere_2; sphere_3; ground]
 
 (**define materials*)
-let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.0;}
-let materials = [red_material; green_material; blue_material]
+let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5;}
+let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5;}
+let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5;}
+let materials = [red_material; green_material; blue_material; grass_material]
 
-let sphere_materials = [1; 0; 2]
+let sphere_materials = [1; 0; 2; 3]
 
 let light_1 = {
   color = {r = 1.0; g = 1.0; b=1.0};
-  intensity = 10.0;
-  position = {x = -1.0; y = 0.0; z = 1.5;};
+  intensity = 2500000.0;
+  position = {x = -500.0; y = -100.0; z = 1000.0;};
 }
 
 let scene = {
@@ -67,7 +71,7 @@ let scene = {
   sphere_materials = sphere_materials;
   lights = [light_1];
   materials = materials;
-  background_color = {r = 0.2; g = 0.2; b = 0.2};
+  background_color = {r = 135.0; g = 206.0; b = 235.0};
   ambient_color = {r = 0.1; g = 0.1; b = 0.1}
 }
 
@@ -81,7 +85,7 @@ let rec draw_scene_rec camera scene x y image =
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
   else begin
-    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y) x y;
+    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 2) x y;
     draw_scene_rec camera scene (x+1) y image
   end
 

@@ -10,6 +10,8 @@ type int_color = {
   b : int;
 }
 
+let (black : color) = {r = 0.0; g =0.0; b = 0.0}
+
 (**add colors*)
 let (|+|) (c1:color) (c2:color) : color = {r = c1.r +. c2.r; g = c1.g +. c2.g; b = c1.b +. c2.b}
 
@@ -19,13 +21,20 @@ let (|*|) (c1:color) (c2:color) : color = {r = c1.r *. c2.r; g = c1.g *. c2.g; b
 (**multiply color by scalar*)
 let (|*.|) (k:float) (c:color) : color = {r = k *. c.r; g = k *. c.g; b = k *. c.b}
 
-(**component-wise multiply colors*)
+let clamp_color (color : color) : color = {
+  r = Util.clamp color.r 0.0 255.0;
+  g = Util.clamp color.g 0.0 255.0;
+  b = Util.clamp color.b 0.0 255.0;
+}
 
 (** turn color to int_color for writing to file*)
-let round_color (color : color) = {r = int_of_float(Float.round color.r); 
-                         g = int_of_float(Float.round color.g);
-                         b = int_of_float(Float.round color.b);
-}
+let round_color (color : color) = 
+  let clamped_color = clamp_color color in
+  {
+    r = int_of_float(Float.round clamped_color.r); 
+    g = int_of_float(Float.round clamped_color.g);
+    b = int_of_float(Float.round clamped_color.b);
+  } 
 
 (** convert color to string - also used for writing .ppm images*)
 let string_of_int_color color = string_of_int(color.r) ^ " " ^ 

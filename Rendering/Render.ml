@@ -37,9 +37,26 @@ let accumulate_lights hit_record scene =
   let total_color = scene.World.Scene.ambient_color |*| (List.nth scene.materials hit_record.material_index).base_color in
   accumulate_lights_rec 0 surface_point total_color hit_record scene
 
-let compute_pixel camera scene x y =
-  let hit_record = World.Scene.ray_intersects_scene (Camera.get_camera_ray x y camera) scene in
-    if hit_record.hit then
-      accumulate_lights hit_record scene
-    else
-      scene.World.Scene.background_color;
+let rec compute_ray_color ray scene color depth = 
+  if depth < 0 then
+    color
+  else
+    let hit_record = World.Scene.ray_intersects_scene ray scene in
+      if hit_record.hit then
+        let material = List.nth scene.materials hit_record.material_index in
+        let surface_color = Math.Color.(color |+| (accumulate_lights hit_record scene)) in
+        if material.shininess > 0.0 then
+          (**offset hit point by normal*)
+          let reflected = Math.Geometry.reflect ray.direction hit_record.normal in
+          let reflect_ray = {Math.Ray.origin = Math.Vector.(hit_record.point +| Math.Util.epsilon *.| hit_record.normal);
+                             Math.Ray.direction = reflected;} in
+          let open Math.Color in
+          surface_color |+|  (material.shininess |*.| (compute_ray_color reflect_ray scene Math.Color.black (depth-1)))
+        else
+          surface_color
+      else
+        color
+
+let compute_pixel camera scene x y depth = 
+  compute_ray_color (Camera.get_camera_ray x y camera) scene Math.Color.black depth
+  

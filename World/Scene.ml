@@ -30,7 +30,7 @@ let rec ray_intersects_scene_rec ray scene i hit_record =
       {
         hit = true; 
         t = sphere_hit_record.t; 
-        point = Math.Vector.(ray.origin +| (sphere_hit_record.t *.| ray.direction));
+        point = sphere_hit_record.point;
         normal = sphere_hit_record.normal;
         material_index = List.nth scene.sphere_materials i;
       } in
