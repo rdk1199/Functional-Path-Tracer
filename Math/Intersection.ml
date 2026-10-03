@@ -77,6 +77,7 @@ let ray_intersects_triangle ray triangle =
         else
           null_hit
 
+(**slab method*)
 (**TODO: check if divide by zero case actually matters*)
 let ray_intersects_aabb ray aabb = 
   let open Ray in
@@ -104,6 +105,6 @@ let ray_intersects_aabb ray aabb =
       t = t_min;
       point = ray.origin +| t_min *.| ray.direction;
       (**TODO: we usually only use AABBs as bounding boxes for other geometry,
-      meaning that the normal should not be necessary*)
+      meaning that the normal should not be necessary - leave it out for now*)
       normal = zero_vec;
     }

@@ -19,9 +19,8 @@ let red : color = {r = 255.0; g = 0.0; b = 0.0}
 let black : color = {r = 0.0; g = 0.0; b= 0.0}
 let purple : color = {r = 255.0; g = 0.0; b = 255.0}
 
-let width = 600
-let height = 600
-
+let width = 900
+let height = 900
 let test_image = IO.Image.create_image width height red
 
 let camera_pos = {x = 0.0; y = -5.0; z = 0.0;}
@@ -56,10 +55,10 @@ let glass_ball = {center = {x = 0.0; y = 0.5; z = 0.0}; radius = 1.0;}
 let spheres = [sphere_1; sphere_2; sphere_3; ground]
 
 (**define materials*)
-let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
-let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
+let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
 let glass_material = {base_color = {r = 0.0; g = 0.0; b = 0.0}; shininess = 0.0; refractive_index = 1.2; transparency = 1.0;}
 let materials = [red_material; green_material; blue_material; grass_material; glass_material]
 
@@ -95,7 +94,7 @@ let rec draw_scene_rec camera scene x y image =
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
   else begin
-    print_endline ("\r" ^ (string_of_int x) ^ ", " ^ (string_of_int y));
+    print_string ("\r" ^ (string_of_int x) ^ ", " ^ (string_of_int y));
     set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 20) x y;
     draw_scene_rec camera scene (x+1) y image
   end

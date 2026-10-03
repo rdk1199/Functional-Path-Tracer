@@ -22,12 +22,13 @@ type scene_hit_record = {
 }
 
 (**hit_record is the hit record for the CLOSEST hit we've had so far*)
-let rec ray_intersects_scene_spheres_rec ray scene i hit_record =
-  if i >= List.length scene.spheres then
+(** i is the current index of where we are in the list, for matching spheres to their materials*)
+let rec ray_intersects_scene_spheres_rec ray scene sphere_list hit_record i =
+  match sphere_list with
     (**end of list - we're done*)
-    hit_record
-  else
-    let sphere_hit_record = Math.Intersection.ray_intersects_sphere ray (List.nth scene.spheres i) in
+  | [] -> hit_record
+  | sphere :: tail ->
+    let sphere_hit_record = Math.Intersection.ray_intersects_sphere ray sphere in
     if sphere_hit_record.hit && (sphere_hit_record.t < hit_record.t || hit_record.hit = false) then
       (**hit a closer object*)
       let new_scene_hit_record = 
@@ -38,18 +39,19 @@ let rec ray_intersects_scene_spheres_rec ray scene i hit_record =
         normal = sphere_hit_record.normal;
         material_index = List.nth scene.sphere_materials i;
       } in
-      ray_intersects_scene_spheres_rec ray scene (i+1) new_scene_hit_record
+      ray_intersects_scene_spheres_rec ray scene tail new_scene_hit_record (i+1)
     else
       (**no hit or object is farther from object we already hit*)
-      ray_intersects_scene_spheres_rec ray scene (i+1) hit_record
+      ray_intersects_scene_spheres_rec ray scene tail hit_record (i+1)
 
 (**hit_record is the hit record for the CLOSEST hit we've had so far*)
-let rec ray_intersects_scene_triangles_rec ray scene i hit_record =
-  if i >= List.length scene.triangles then
+(** i is the current index of where we are in the list, for matching triangles to their materials*)
+let rec ray_intersects_scene_triangles_rec ray scene triangle_list hit_record i =
+  match triangle_list with
     (**end of list - we're done*)
-    hit_record
-  else
-    let triangle_hit_record = Math.Intersection.ray_intersects_triangle ray (List.nth scene.triangles i) in
+  | [] -> hit_record
+  | triangle :: tail ->
+    let triangle_hit_record = Math.Intersection.ray_intersects_triangle ray triangle in
     if triangle_hit_record.hit && (triangle_hit_record.t < hit_record.t || hit_record.hit = false) then
       (**hit a closer object*)
       let new_scene_hit_record = 
@@ -60,10 +62,10 @@ let rec ray_intersects_scene_triangles_rec ray scene i hit_record =
         normal = triangle_hit_record.normal;
         material_index = List.nth scene.triangle_materials i;
       } in
-      ray_intersects_scene_triangles_rec ray scene (i+1) new_scene_hit_record
+      ray_intersects_scene_triangles_rec ray scene tail new_scene_hit_record (i+1)
     else
       (**no hit or object is farther from object we already hit*)
-      ray_intersects_scene_triangles_rec ray scene (i+1) hit_record
+      ray_intersects_scene_triangles_rec ray scene tail hit_record (i+1)
 
 
 let ray_intersects_scene ray scene = 
@@ -73,8 +75,8 @@ let ray_intersects_scene ray scene =
                            point = {x = 0.0; y = 0.0; z=0.0}; 
                            normal = {x = 0.0; y =0.0; z=0.0}; 
                            material_index = 0} in
-  let sphere_hit = ray_intersects_scene_spheres_rec ray scene 0 default_scene_hit in
-  let triangle_hit = ray_intersects_scene_triangles_rec ray scene 0 default_scene_hit in
+  let sphere_hit = ray_intersects_scene_spheres_rec ray scene scene.spheres default_scene_hit 0 in
+  let triangle_hit = ray_intersects_scene_triangles_rec ray scene scene.triangles default_scene_hit 0 in
 
   if not sphere_hit.hit then
     triangle_hit
