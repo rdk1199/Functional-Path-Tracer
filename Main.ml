@@ -19,8 +19,8 @@ let red : color = {r = 255.0; g = 0.0; b = 0.0}
 let black : color = {r = 0.0; g = 0.0; b= 0.0}
 let purple : color = {r = 255.0; g = 0.0; b = 255.0}
 
-let width = 800
-let height = 450
+let width = 600
+let height = 600
 
 let test_image = IO.Image.create_image width height red
 

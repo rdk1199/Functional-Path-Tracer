@@ -76,3 +76,34 @@ let ray_intersects_triangle ray triangle =
         }
         else
           null_hit
+
+(**TODO: check if divide by zero case actually matters*)
+let ray_intersects_aabb ray aabb = 
+  let open Ray in
+  let open Vector in
+  let open Shape in
+  let inv_dir_x = 1.0 /. ray.direction.x in
+  let inv_dir_y = 1.0 /. ray.direction.y in
+  let inv_dir_z = 1.0 /. ray.direction.z in
+  let t1 = inv_dir_x *. (aabb.min.x -. ray.origin.x) in
+  let t2 = inv_dir_x *. (aabb.max.x -. ray.origin.x) in
+  let t3 = inv_dir_y *. (aabb.min.y -. ray.origin.y) in
+  let t4 = inv_dir_y *. (aabb.max.y -. ray.origin.y) in
+  let t5 = inv_dir_z *. (aabb.min.z -. ray.origin.z) in
+  let t6 = inv_dir_z *. (aabb.max.z -. ray.origin.z) in
+  let t_min = Float.max (Float.min t5 t6) (Float.max (Float.min t1 t2) (Float.min t3 t4)) in
+  let t_max = Float.min (Float.max t5 t6) (Float.min (Float.max t1 t2) (Float.max t3 t4)) in
+
+  if t_max < 0.0 then
+    null_hit
+  else if t_min > t_max then
+    null_hit
+  else
+    {
+      hit = true;
+      t = t_min;
+      point = ray.origin +| t_min *.| ray.direction;
+      (**TODO: we usually only use AABBs as bounding boxes for other geometry,
+      meaning that the normal should not be necessary*)
+      normal = zero_vec;
+    }
