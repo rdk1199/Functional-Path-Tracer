@@ -1,5 +1,6 @@
 open IO.Image
 open IO.PPMWriter
+open IO.ObjParser
 open Math.Color
 open RenderingLib.Camera
 open Math.Vector
@@ -18,8 +19,8 @@ let red : color = {r = 255.0; g = 0.0; b = 0.0}
 let black : color = {r = 0.0; g = 0.0; b= 0.0}
 let purple : color = {r = 255.0; g = 0.0; b = 255.0}
 
-let width = 1600
-let height = 900
+let width = 800
+let height = 450
 
 let test_image = IO.Image.create_image width height red
 
@@ -52,17 +53,17 @@ let ground = {center = {x = 0.0; y = 1.0; z = -2000.0}; radius = 1999.0}
 
 let glass_ball = {center = {x = 0.0; y = 0.5; z = 0.0}; radius = 1.0;}
 
-let spheres = [sphere_1; sphere_2; sphere_3; ground; glass_ball]
+let spheres = [sphere_1; sphere_2; sphere_3; ground]
 
 (**define materials*)
-let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
+let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
+let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
+let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
+let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.0; refractive_index = 1.4; transparency = 0.0;}
 let glass_material = {base_color = {r = 0.0; g = 0.0; b = 0.0}; shininess = 0.0; refractive_index = 1.2; transparency = 1.0;}
 let materials = [red_material; green_material; blue_material; grass_material; glass_material]
 
-let sphere_materials = [1; 0; 2; 3; 4]
+let sphere_materials = [1; 0; 2; 3]
 
 let light_1 = {
   color = {r = 1.0; g = 1.0; b=1.0};
@@ -70,9 +71,14 @@ let light_1 = {
   position = {x = -500.0; y = -100.0; z = 1000.0;};
 }
 
+let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Monkey.obj"
+let () = print_endline "Parsed obj!"
+
 let scene = {
   spheres = spheres;
   sphere_materials = sphere_materials;
+  triangles = triangle_list;
+  triangle_materials = triangle_materials;
   lights = [light_1];
   materials = materials;
   background_color = {r = 135.0; g = 206.0; b = 235.0};
@@ -89,6 +95,7 @@ let rec draw_scene_rec camera scene x y image =
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image
   else begin
+    print_endline ("\r" ^ (string_of_int x) ^ ", " ^ (string_of_int y));
     set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 20) x y;
     draw_scene_rec camera scene (x+1) y image
   end
@@ -102,3 +109,4 @@ let _  = draw_scene camera scene test_image
 
 let file_name = "test.ppm"
 let _ = image_to_ppm test_image file_name
+
