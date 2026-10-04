@@ -37,7 +37,7 @@ let sphere_radius = 1.0
 
 let sphere_1 = {center = sphere_center; radius = sphere_radius}
 
-let sphere_2_center = {x = 2.2; y = 4.5; z = 0.0;}
+let sphere_2_center = {x = 2.2; y = 4.0; z = 0.0;}
 let sphere_2_radius = 1.0
 
 let sphere_2 = {center = sphere_2_center; radius = sphere_2_radius}
@@ -60,7 +60,8 @@ let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0
 let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
 let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
 let glass_material = {base_color = {r = 0.0; g = 0.0; b = 0.0}; shininess = 0.0; refractive_index = 1.2; transparency = 1.0;}
-let materials = [red_material; green_material; blue_material; grass_material; glass_material]
+let mirror_material = {base_color = Math.Color.white; shininess = 1.0; refractive_index = 1.2; transparency = 0.0;}
+let materials = [red_material; green_material; blue_material; grass_material; glass_material; mirror_material]
 
 let sphere_materials = [1; 0; 2; 3]
 
@@ -70,7 +71,26 @@ let light_1 = {
   position = {x = -500.0; y = -100.0; z = 1000.0;};
 }
 
-let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Monkey.obj"
+let mirror_corner_1 = {x = -4.0; y = -1.0; z = -1.0}
+let mirror_corner_2 = {x = -4.0; y = -1.0; z = 2.0}
+let mirror_corner_3 = {x = 4.0; y = -1.0; z = -1.0}
+let mirror_corner_4 = {x = 4.0; y = -1.0; z = 2.0}
+
+
+
+let mirror_tri_1 = {
+  p1 = mirror_corner_1;
+  p2 = mirror_corner_2;
+  p3 = mirror_corner_3;
+}
+
+let mirror_tri_2 = {
+  p1 = mirror_corner_2;
+  p2 = mirror_corner_3;
+  p3 = mirror_corner_4;
+}
+
+let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Isosphere.obj"
 let () = print_endline "Parsed obj!"
 
 let scene = {
@@ -95,14 +115,14 @@ let rec draw_scene_rec camera scene x y image =
     draw_scene_rec camera scene 0 (y+1) image
   else begin
     print_string ("\r" ^ (string_of_int x) ^ ", " ^ (string_of_int y));
-    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 20) x y;
+    set_pixel image (RenderingLib.Render.compute_pixel camera scene x y 3) x y;
     draw_scene_rec camera scene (x+1) y image
   end
 
 let draw_scene camera scene image =
   draw_scene_rec camera scene 0 0 image
 
-(*let () = print_endline (string_of_color (RenderingLib.Render.compute_pixel camera scene 800 450 10))*)
+let () = print_endline (string_of_color (RenderingLib.Render.compute_pixel camera scene 450 450 10))
 
 let _  = draw_scene camera scene test_image
 

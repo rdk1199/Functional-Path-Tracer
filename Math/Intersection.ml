@@ -72,7 +72,7 @@ let ray_intersects_triangle ray triangle =
            hit = true;
            t = t; 
            point = ray.origin +| t *.| ray.direction;
-           normal = signed_normal
+           normal = normalized signed_normal
         }
         else
           null_hit

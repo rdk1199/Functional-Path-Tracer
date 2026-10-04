@@ -12,6 +12,8 @@ type int_color = {
 
 let (black : color) = {r = 0.0; g =0.0; b = 0.0}
 
+let (white : color) = {r = 255.0; g = 255.0; b=255.0}
+
 (**add colors*)
 let (|+|) (c1:color) (c2:color) : color = {r = c1.r +. c2.r; g = c1.g +. c2.g; b = c1.b +. c2.b}
 

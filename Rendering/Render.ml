@@ -59,13 +59,15 @@ let rec compute_ray_color ray scene color depth =
                               }
             in
             let open Math.Color in
+            (*let () = print_endline ("reflecting, normal: " ^ (Math.Vector.string_of_vector3 hit_record.normal)) in*)
             (material.shininess |*.| (compute_ray_color reflect_ray scene Math.Color.black (depth-1)))
           else
             Math.Color.black
         in
 
         let refract_color =
-          if material.transparency > 0.0 then
+          if material.transparency > Math.Util.epsilon then
+            let _ = print_endline ("transparency: " ^ (string_of_float material.transparency) ^ "\n") in
             let new_refractive_index = if ray.Math.Ray.inside then 1.0 else material.refractive_index in
             let refracted = Math.Geometry.refract ray.direction hit_record.normal ray.refractive_index new_refractive_index in
             let total_internal_reflection = (Math.Vector.dot refracted hit_record.normal > 0.0) in
@@ -91,6 +93,7 @@ let rec compute_ray_color ray scene color depth =
                                   true;
             }
             in
+            let () = print_endline "refracting\n" in
             Math.Color.(material.transparency |*.| (compute_ray_color refract_ray scene Math.Color.black (depth-1)));
           else
             Math.Color.black
