@@ -57,15 +57,58 @@ let glass_ball = {center = {x = 0.0; y = 0.5; z = 0.0}; radius = 1.0;}
 let spheres = [sphere_1; sphere_2; sphere_3; ground]
 
 (**define materials*)
-let red_material = {base_color = {r = 125.0; g = 0.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let green_material = {base_color = {r = 0.0; g = 125.0; b = 0.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let blue_material = {base_color = {r = 0.0; g = 0.0; b = 125.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let grass_material = {base_color = {r = 25.0; g = 25.0; b = 25.0;}; shininess = 0.5; refractive_index = 1.4; transparency = 0.0;}
-let glass_material = {base_color = {r = 0.0; g = 0.0; b = 0.0}; shininess = 0.0; refractive_index = 1.2; transparency = 1.0;}
-let mirror_material = {base_color = Math.Color.white; shininess = 1.0; refractive_index = 1.2; transparency = 0.0;}
+let red_material = {
+  name = "red"; 
+  base_color = {r = 125.0; g = 0.0; b = 0.0;}; 
+  shininess = 0.5; 
+  refractive_index = 1.4; 
+  opacity = 1.0;
+  emissive = Math.Color.black;
+}
+let green_material = {
+  name = "green";
+  base_color = {r = 0.0; g = 125.0; b = 0.0;};
+  shininess = 0.5;
+  refractive_index = 1.4;
+  opacity = 1.0;
+  emissive = Math.Color.black;
+}
+let blue_material = {
+  name = "blue";
+  base_color = {r = 0.0; g = 0.0; b = 125.0;};
+  shininess = 0.5;
+  refractive_index = 1.4;
+  opacity = 1.0;
+  emissive = Math.Color.black;
+}
+let grass_material = {
+  name = "grass";
+  base_color = {r = 25.0; g = 25.0; b = 25.0;};
+  shininess = 0.5;
+  refractive_index = 1.4;
+  opacity = 1.0;
+  emissive = Math.Color.black;
+}
+let glass_material = {
+  name = "glass";
+  base_color = {r = 0.0; g = 0.0; b = 0.0};
+  shininess = 0.0;
+  refractive_index = 1.2;
+  opacity = 0.0;
+  emissive = Math.Color.black;
+}
+let mirror_material = {
+  name = "mirror";
+  base_color = Math.Color.white;
+  shininess = 1.0;
+  refractive_index = 1.2;
+  opacity = 1.0;
+  emissive = Math.Color.black;
+}
+
 let materials = [red_material; green_material; blue_material; grass_material; glass_material; mirror_material]
 
-let sphere_materials = [1; 0; 2; 3]
+let sphere_materials = [0; 0; 0; 0]
 
 let light_1 = {
   color = {r = 1.0; g = 1.0; b=1.0};
@@ -92,8 +135,9 @@ let mirror_tri_2 = {
   p3 = mirror_corner_4;
 }
 
-let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Monkey.obj"
-let () = print_endline "Parsed obj!"
+let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/Monkey.obj"
+let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/Monkey.mtl" material_name_list
+let () = print_endline "Parsed obj and mtl!"
 
 let scene = {
   spheres = spheres;
@@ -102,7 +146,7 @@ let scene = {
   triangle_materials = triangle_materials;
   bvh = build_bvh triangle_list triangle_materials;
   lights = [light_1];
-  materials = materials;
+  materials = material_list;
   background_color = {r = 135.0; g = 206.0; b = 235.0};
   ambient_color = {r = 0.1; g = 0.1; b = 0.1}
 }
@@ -128,11 +172,7 @@ let draw_scene camera scene image =
 
 let start_float = Unix.gettimeofday ()
 
-(*let _  = draw_scene camera scene test_image*)
-
-let pcg_32_gen = create_pcg_32_gen 568 1
-
-let () = print_endline (Math.Util.vertical_string_of_float_list (get_all_bit_distributions (generate_random_stream pcg_32_gen 10000000) 31))
+let _  = draw_scene camera scene test_image
 
 let duration = Unix.gettimeofday() -. start_float
 
