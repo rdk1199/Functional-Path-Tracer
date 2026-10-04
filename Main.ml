@@ -2,6 +2,7 @@ open IO.Image
 open IO.PPMWriter
 open IO.ObjParser
 open Math.Color
+open Math.Random
 open RenderingLib.Camera
 open Math.Vector
 open Math.BoundingVolumeHierarchy
@@ -127,7 +128,11 @@ let draw_scene camera scene image =
 
 let start_float = Unix.gettimeofday ()
 
-let _  = draw_scene camera scene test_image
+(*let _  = draw_scene camera scene test_image*)
+
+let pcg_32_gen = create_pcg_32_gen 568 1
+
+let () = print_endline (Math.Util.vertical_string_of_float_list (get_all_bit_distributions (generate_random_stream pcg_32_gen 10000000) 31))
 
 let duration = Unix.gettimeofday() -. start_float
 

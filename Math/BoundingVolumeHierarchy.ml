@@ -123,8 +123,3 @@ let build_bvh triangle_list material_indices =
   let bvh = combine_bvhs (List.map (fun (tri, material) -> (bvh_from_triangle tri material)) triangle_and_material_list) in
   print_endline "finished BVH generation";
   bvh
-    
-
-
-
-
