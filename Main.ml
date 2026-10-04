@@ -4,6 +4,7 @@ open IO.ObjParser
 open Math.Color
 open RenderingLib.Camera
 open Math.Vector
+open Math.BoundingVolumeHierarchy
 open Math.Ray
 open Math.Shape
 open Math.Intersection
@@ -90,7 +91,7 @@ let mirror_tri_2 = {
   p3 = mirror_corner_4;
 }
 
-let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Isosphere.obj"
+let (triangle_list, triangle_materials, material_list) = parse_obj "ModelFiles/Monkey.obj"
 let () = print_endline "Parsed obj!"
 
 let scene = {
@@ -98,6 +99,7 @@ let scene = {
   sphere_materials = sphere_materials;
   triangles = triangle_list;
   triangle_materials = triangle_materials;
+  bvh = build_bvh triangle_list triangle_materials;
   lights = [light_1];
   materials = materials;
   background_color = {r = 135.0; g = 206.0; b = 235.0};
@@ -119,12 +121,17 @@ let rec draw_scene_rec camera scene x y image =
     draw_scene_rec camera scene (x+1) y image
   end
 
+
 let draw_scene camera scene image =
   draw_scene_rec camera scene 0 0 image
 
-let () = print_endline (string_of_color (RenderingLib.Render.compute_pixel camera scene 450 450 10))
+let start_float = Unix.gettimeofday ()
 
 let _  = draw_scene camera scene test_image
+
+let duration = Unix.gettimeofday() -. start_float
+
+let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
 let file_name = "test.ppm"
 let _ = image_to_ppm test_image file_name

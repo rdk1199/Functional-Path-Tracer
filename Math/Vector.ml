@@ -25,6 +25,16 @@ let zero_vec = {
     z = 0.0
 }
 
+let vector3_pointwise_fun v1 v2 f = {
+    x = f v1.x v2.x;
+    y = f v1.y v2.y;
+    z = f v1.z v2.z;
+}
+
+let vector3_min v1 v2 = vector3_pointwise_fun v1 v2 Float.min
+let vector3_max v1 v2 = vector3_pointwise_fun v1 v2 Float.max
+
+
 let dot v1 v2 = v1.x *. v2.x +. v1.y *. v2.y +. v1.z *. v2.z
 
 let square_magnitude v = dot v v
