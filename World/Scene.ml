@@ -10,6 +10,7 @@ type scene = {
 
   lights : Light.point_light list;
   materials : Material.material list;
+
   background_color : Math.Color.color;
   ambient_color : Math.Color.color;
 }

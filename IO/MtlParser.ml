@@ -8,7 +8,7 @@ let parse_mtl_line line current_material_name_list current_material_list =
   else if String.sub line 0 3 = "Kd " then
     (**Base color*)
     let base_color = Scanf.sscanf line "Kd %f %f %f" ( fun r g b ->
-      ({r = 255.0 *. r; g = 255.0 *. g; b = 255.0 *. b;} : Math.Color.color)
+      ({r = r; g = g; b = b;} : Math.Color.color)
     )
     in
     let new_material = {(List.hd current_material_list) with base_color = base_color} in
@@ -69,6 +69,6 @@ let parse_mtl_file file_name obj_material_list =
   (**Not the most efficient sort, but there won't be that many materials*)
   List.sort (fun mat1 mat2 -> 
     compare 
-    (List.find_index (fun name -> name = mat1.World.Material.name) material_name_list)
-    (List.find_index (fun name -> name = mat2.World.Material.name) material_name_list)
+    (List.find_index (fun name -> name = mat1.World.Material.name) obj_material_list)
+    (List.find_index (fun name -> name = mat2.World.Material.name) obj_material_list)
   ) material_list

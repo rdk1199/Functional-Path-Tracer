@@ -17,7 +17,7 @@ let get_pixel image x y =
 (**non-functional! mutating state! set pixel (x,y) to value color*)
 (** TODO: this probably isn't even necessary as we could use a list *)
 let set_pixel image color x y =
-  image.data.(get_flattened_pixel_index image.width x y) <- color
+  image.data.(get_flattened_pixel_index image.width x y) <- (255.0 |*.| color)
 
 let create_image width height color =
   {width = width; height = height; data = Array.make (width * height) color}

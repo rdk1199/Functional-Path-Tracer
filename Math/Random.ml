@@ -17,11 +17,11 @@ let pcg_32_rand gen  =
   let new_seed = lcg_rand gen.seed (gen.shift lor 1) in
   let xor_shifted = Int64.to_int32(Int64.shift_right_logical (Int64.logxor (Int64.shift_right_logical gen.seed 18) gen.seed) 27) in
   let rot = Int64.to_int (Int64.shift_right_logical gen.seed 59) in (**5 bits*)
-  let out = Int32.to_int (
+  let out = Option.get (Int32.unsigned_to_int (
     Int32.logor 
     (Int32.shift_right_logical xor_shifted rot) 
     (Int32.shift_left xor_shifted ((-rot) land 31))
-  )
+  ))
   in
   let new_pcg_32_gen_state = {
     seed = new_seed;
@@ -46,12 +46,17 @@ let rand_max = ((1 lsl 32) - 1)
 let rand_0_1_float gen = 
   let (rand_int, new_gen) = pcg_32_rand gen in
   let out = (float_of_int rand_int) /. (float_of_int rand_max) in
-  (new_gen, out)
+  (out, new_gen)
 
 let rand_float_in_range low high gen =
-  let (new_gen, rand_float) = rand_0_1_float gen in
+  let (rand_float, new_gen) = (rand_0_1_float gen) in
   let out = low +. (high -. low) *. rand_float in
-  (new_gen, out)
+  (out, new_gen)
+
+(**flip as in coin flip -> return true with probability p*)
+let rand_flip prob gen =
+  let (value, gen2) = rand_0_1_float gen in
+  (value <= prob, gen2) 
 
 (**return list of randomly generated ints*)
 let rec generate_random_stream gen length = 
@@ -60,6 +65,10 @@ let rec generate_random_stream gen length =
   else
     let (out, new_gen) = pcg_32_rand gen in
     out :: (generate_random_stream new_gen (length - 1))
+
+let print_random_stream gen length =
+  let int_list = generate_random_stream gen length in
+  print_endline (Util.vertical_string_of_int_list int_list)
 
 (**DEBUG: return proportion of numbers in int_list for which n'th bit is 0*)
 (**n increases as we go from least -> most significant bit*)

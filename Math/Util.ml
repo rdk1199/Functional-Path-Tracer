@@ -16,6 +16,11 @@ let rec to_binary_string value =
   else
     (to_binary_string (value lsr 1)) ^ (string_of_int (value land 1))
 
+let rec vertical_string_of_int_list int_list = 
+  match int_list with
+  | [] -> ""
+  | head :: tail -> string_of_int head ^ "\n" ^ (vertical_string_of_int_list tail)
+
 let rec vertical_string_of_float_list float_list = 
   match float_list with
   | [] -> ""
