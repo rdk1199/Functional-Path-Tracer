@@ -4,20 +4,22 @@ let compute_termination_weight stop_prob =
 
 (**Simple diffuse Lambertian accumulator*)
 (**Stop prob = depth limiter*)
-let rec simple_lambertian_accumulate ray scene (stop_prob:float) gen =
+let simple_lambertian_accumulate ray scene (stop_prob:float) gen =
+  let rec simple_lambertian_accumulate_rec ray scene gen color_multiplier accum_color = 
   let open Math.Vector in
   let open Math.Ray in
   let open Math.Color in
   let scene_hit_info = World.Scene.ray_intersects_scene ray scene in
   if scene_hit_info.hit = false then
-    (scene.background_color, gen)
+    (accum_color |+| (color_multiplier |*| scene.background_color), gen)
   else
     let material = List.nth scene.materials scene_hit_info.material_index in
     let base_color = material.base_color in
     let emissive = material.emissive in
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
+    let new_accum_color = accum_color |+| (color_multiplier |*| emissive) in
     if stop then
-      (emissive, gen2)
+      (new_accum_color, gen2)
     else
       let (reflect_sample, gen3) = Math.RandomVector.random_unit_vector_in_hemisphere gen2 scene_hit_info.normal in
       let terminate_weight = compute_termination_weight stop_prob in
@@ -31,7 +33,7 @@ let rec simple_lambertian_accumulate ray scene (stop_prob:float) gen =
         inside = ray.inside;
       }
       in
-      let (reflect_color, final_gen) = simple_lambertian_accumulate reflect_ray scene stop_prob gen3 in
-      let final_color = weight |*.| base_color |*| reflect_color in
-      (**TODO: it's trickier but tail recursion could be used here*)
-      (emissive |+| final_color, final_gen)
+      let new_color_multiplier = weight |*.| base_color |*| color_multiplier in
+      simple_lambertian_accumulate_rec reflect_ray scene gen3 new_color_multiplier new_accum_color
+  in
+  simple_lambertian_accumulate_rec ray scene gen Math.Color.ones Math.Color.black
