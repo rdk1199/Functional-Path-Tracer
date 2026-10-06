@@ -17,7 +17,7 @@ let rec image_to_ppm_rec x y (image : Image.image) out_channel =
     (**done with current row - onto the next*)
     image_to_ppm_rec 0 (y+1) image out_channel
   else begin
-    append_to_file out_channel ((string_of_int_color (round_color (get_pixel image x y))) ^ " ");
+    append_to_file out_channel ((string_of_int_color (round_color (255.0 |*.| (get_pixel image x y)))) ^ " ");
     image_to_ppm_rec (x+1) y image out_channel
   end
 

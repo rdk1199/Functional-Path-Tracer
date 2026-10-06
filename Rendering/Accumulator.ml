@@ -1,4 +1,7 @@
 
+let compute_termination_weight stop_prob = 
+  1.0 /. (1.0 -. stop_prob)
+
 (**Simple diffuse Lambertian accumulator*)
 (**Stop prob = depth limiter*)
 let rec simple_lambertian_accumulate ray scene (stop_prob:float) gen =
@@ -17,7 +20,7 @@ let rec simple_lambertian_accumulate ray scene (stop_prob:float) gen =
       (emissive, gen2)
     else
       let (reflect_sample, gen3) = Math.RandomVector.random_unit_vector_in_hemisphere gen2 scene_hit_info.normal in
-      let terminate_weight = (1.0 /. (1.0 -. stop_prob)) in
+      let terminate_weight = compute_termination_weight stop_prob in
       (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
       let cos_theta = Float.max (Math.Vector.dot scene_hit_info.normal reflect_sample) 0.0 in
       let weight = 2.0 *. terminate_weight *. cos_theta in

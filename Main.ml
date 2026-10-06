@@ -25,7 +25,7 @@ let width = 900
 let height = 900
 let test_image = IO.Image.create_image width height red
 
-let camera_pos = {x = 0.0; y = -3.0; z = 1.0;}
+let camera_pos = {x = 0.0; y = -4.0; z = 1.0;}
 let camera_forward = {x = 0.0; y = 1.0; z = 0.0;}
 let camera_up = {x = 0.0; y = 0.0; z = 1.0;}
 let focal_length = 1.0
@@ -58,35 +58,52 @@ let scene = {
 
 let () = print_endline "defined camera and scene"
 
-let rec draw_scene_rec camera scene x y image r_gen =
+let rec draw_scene_rec camera scene x y image r_gen accumulator num_samples avg_depth =
   if y >= camera.res_y then
     (**done!*)
     ()
   else if x >= camera.res_x then
     (**finished this row - onto the next*)
-    draw_scene_rec camera scene 0 (y+1) image r_gen
+    draw_scene_rec camera scene 0 (y+1) image r_gen accumulator num_samples avg_depth
   else begin
-    print_string ("\r" ^ (string_of_int x) ^ ", " ^ (string_of_int y));
-    let accum_color, new_gen = RenderingLib.Render.accumulate_pixel camera scene x y 5 RenderingLib.Accumulator.simple_lambertian_accumulate 400 r_gen in
+    let accum_color, new_gen = RenderingLib.Render.accumulate_pixel camera scene x y avg_depth accumulator num_samples r_gen in
     set_pixel image accum_color x y;
-    draw_scene_rec camera scene (x+1) y image new_gen
+    draw_scene_rec camera scene (x+1) y image new_gen accumulator num_samples avg_depth
   end
 
 
-let draw_scene camera scene image =
-  draw_scene_rec camera scene 0 0 image
+let draw_scene camera scene image accumulator num_samples avg_depth gen =
+  draw_scene_rec camera scene 0 0 image gen accumulator num_samples avg_depth
+
+
+let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_depth =
+  let seed_gen = Math.Random.create_pcg_32_gen 0 1 in
+  let num_threads = Domain.recommended_domain_count () in
+  let seed_list = Math.Random.generate_random_stream seed_gen num_threads in
+  print_endline (string_of_int num_threads);
+  let image_list = List.init num_threads (fun i -> (create_image width height Math.Color.black)) in
+  let make_draw_thread camera scene index accumulator num_samples avg_depth =
+    let thread_gen = Math.Random.create_pcg_32_gen (List.nth seed_list index) 1 in
+    Domain.spawn (fun () -> draw_scene camera scene (List.nth image_list index) accumulator samples_per_thread avg_depth thread_gen)
+  in
+  let thread_list = List.init num_threads (fun i -> 
+    print_endline (string_of_int (List.nth seed_list i));
+    (make_draw_thread camera scene i accumulator samples_per_thread avg_depth)
+    ) in
+  let _ = List.iter Domain.join thread_list in
+  print_endline (string_of_int (List.length image_list));
+  average_combine_images image_list
+  
+
 
 let start_float = Unix.gettimeofday ()
 
-
-let gen = Math.Random.create_pcg_32_gen 0 1
-
-let _  = draw_scene camera scene test_image gen
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.simple_lambertian_accumulate 100 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "test.ppm"
-let _ = image_to_ppm test_image file_name
+let file_name = "mt_test.ppm"
+let _ = image_to_ppm final_image file_name
 
