@@ -4,6 +4,12 @@ type vector3 = {
     z : float;
 }
 
+let up = {
+    x = 0.0;
+    y = 0.0;
+    z = 1.0;
+}
+
 (** Convert Vector3 to string*)
 let string_of_vector3 v = string_of_float(v.x) ^ ", " ^ string_of_float(v.y) ^ ", " ^ string_of_float(v.z)
  

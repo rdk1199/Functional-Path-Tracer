@@ -43,6 +43,12 @@ let create_pcg_32_gen seed shift =
 
 let rand_max = ((1 lsl 32) - 1)
 
+(**modify ordinary function to pass the seed right on through - used to apply additional processing to random values 
+   using existing non-random functions *)
+let random_bind (f : 'a ->'a) = (fun x_gen_pair ->
+  ((f (fst x_gen_pair)), snd x_gen_pair)
+)
+
 let rand_0_1_float gen = 
   let (rand_int, new_gen) = pcg_32_rand gen in
   let out = (float_of_int rand_int) /. (float_of_int rand_max) in

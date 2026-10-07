@@ -21,11 +21,11 @@ let red : color = {r = 255.0; g = 0.0; b = 0.0}
 let black : color = {r = 0.0; g = 0.0; b= 0.0}
 let purple : color = {r = 255.0; g = 0.0; b = 255.0}
 
-let width = 900
-let height = 900
+let width = 600
+let height = 600
 let test_image = IO.Image.create_image width height red
 
-let camera_pos = {x = 0.0; y = -4.0; z = 1.0;}
+let camera_pos = {x = 0.0; y = -2.0; z = 1.0;}
 let camera_forward = {x = 0.0; y = 1.0; z = 0.0;}
 let camera_up = {x = 0.0; y = 0.0; z = 1.0;}
 let focal_length = 1.0
@@ -78,7 +78,7 @@ let draw_scene camera scene image accumulator num_samples avg_depth gen =
 
 let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_depth =
   let seed_gen = Math.Random.create_pcg_32_gen 0 1 in
-  let num_threads = Domain.recommended_domain_count () in
+  let num_threads =  Domain.recommended_domain_count () - 1  in
   let seed_list = Math.Random.generate_random_stream seed_gen num_threads in
   print_endline (string_of_int num_threads);
   let image_list = List.init num_threads (fun i -> (create_image width height Math.Color.black)) in
@@ -98,12 +98,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.simple_lambertian_accumulate 100 5
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.cos_lambertian_accumulate 50 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_tail_rec_test.ppm"
+let file_name = "st_cos_test.ppm"
 let _ = image_to_ppm final_image file_name
 
