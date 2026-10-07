@@ -25,6 +25,8 @@ let (|*|) (c1:color) (c2:color) : color = {r = c1.r *. c2.r; g = c1.g *. c2.g; b
 (**multiply color by scalar*)
 let (|*.|) (k:float) (c:color) : color = {r = k *. c.r; g = k *. c.g; b = k *. c.b}
 
+let color_sq_magnitude (c:color) = c.r *. c.r +. c.g *. c.g +. c.b *. c.b
+
 let clamp_color (color : color) : color = {
   r = Util.clamp color.r 0.0 255.0;
   g = Util.clamp color.g 0.0 255.0;

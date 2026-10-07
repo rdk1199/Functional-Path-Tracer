@@ -44,18 +44,10 @@ let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/CornellBox.mtl" mate
 let () = print_endline "Parsed obj and mtl!"
 
 
-let scene = {
-  spheres = [];
-  sphere_materials = [];
-  triangles = triangle_list;
-  triangle_materials = triangle_materials;
-  bvh = build_bvh triangle_list triangle_materials;
-  lights = [light_1];
-  materials = material_list;
-  background_color = {r = 0.0; g = 0.0; b = 0.0};
-  ambient_color = {r = 0.1; g = 0.1; b = 0.1}
-}
 
+
+
+let scene = create_scene triangle_list triangle_materials (build_bvh triangle_list triangle_materials) material_list Math.Color.black
 let () = print_endline "defined camera and scene"
 
 let rec draw_scene_rec camera scene x y image r_gen accumulator num_samples avg_depth =

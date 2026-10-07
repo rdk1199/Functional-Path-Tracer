@@ -11,9 +11,39 @@ type scene = {
   lights : Light.point_light list;
   materials : Material.material list;
 
+  (**array of indices of triangles with emissive materials, for sampling*)
+  emissive_triangles : int Iarray.t;
+
   background_color : Math.Color.color;
   ambient_color : Math.Color.color;
 }
+
+let create_scene triangles triangle_materials bvh materials background_color =
+  let emissive_triangles = 
+    triangles
+    |> List.mapi (fun i _triangle ->
+      if Math.Color.color_sq_magnitude (List.nth materials (List.nth triangle_materials i)).Material.emissive > 0.0
+      then Some i
+      else None)
+    |> List.filter_map (fun x -> x)
+  in
+  {
+    spheres = [];
+    sphere_materials = [];
+
+    triangles = triangles;
+    triangle_materials = triangle_materials;
+
+    bvh = bvh;
+
+    lights = [];
+    materials = materials;
+
+    emissive_triangles = Iarray.of_list emissive_triangles;
+    background_color = background_color;
+    ambient_color = Math.Color.black;
+  }
+
 
 (**record for information about where a ray hits a scene*)
 type scene_hit_record = {
