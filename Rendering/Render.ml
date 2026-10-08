@@ -24,7 +24,7 @@ let rec accumulate_lights_rec surface_point (total_color : Math.Color.color) hit
     else
       let adjusted_intensity = light.intensity /. (distance_to_light *. distance_to_light) in
       let color_delta = (cos_angle_between *. adjusted_intensity) |*.| 
-                       (light.color |*| (List.nth scene.materials hit_record.material_index).base_color) in 
+                       (light.color |*| (Iarray.get scene.materials hit_record.material_index).base_color) in 
       let new_total = total_color |+| color_delta in
       accumulate_lights_rec surface_point new_total hit_record scene tail
 
@@ -35,7 +35,7 @@ let accumulate_lights hit_record scene =
   let open World.Scene in
   (**push out the surface point a bit to avoid self intersection when checking for lights*)
   let surface_point = hit_record.point +| (Math.Util.epsilon *.| hit_record.normal) in
-  let total_color = scene.World.Scene.ambient_color |*| (List.nth scene.materials hit_record.material_index).base_color in
+  let total_color = scene.World.Scene.ambient_color |*| (Iarray.get scene.materials hit_record.material_index).base_color in
   accumulate_lights_rec surface_point total_color hit_record scene scene.lights
 
 let rec compute_ray_color ray scene color depth = 
@@ -45,7 +45,7 @@ let rec compute_ray_color ray scene color depth =
   else
     let hit_record = World.Scene.ray_intersects_scene ray scene in
       if hit_record.hit then
-        let material = List.nth scene.materials hit_record.material_index in
+        let material = Iarray.get scene.materials hit_record.material_index in
         let surface_color = Math.Color.(color |+| (accumulate_lights hit_record scene)) in
 
         let reflect_color = 

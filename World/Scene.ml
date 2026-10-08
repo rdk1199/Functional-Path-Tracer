@@ -4,12 +4,12 @@ type scene = {
   sphere_materials : int list;
 
   triangles : Math.Shape.triangle list;
-  triangle_materials : int list;
+  triangle_materials : int Iarray.t;
 
   bvh : Math.BoundingVolumeHierarchy.bvh;
 
   lights : Light.point_light list;
-  materials : Material.material list;
+  materials : Material.material Iarray.t;
 
   (**array of indices of triangles with emissive materials, for sampling*)
   emissive_triangles : int Iarray.t;
@@ -32,12 +32,12 @@ let create_scene triangles triangle_materials bvh materials background_color =
     sphere_materials = [];
 
     triangles = triangles;
-    triangle_materials = triangle_materials;
+    triangle_materials = Iarray.of_list triangle_materials;
 
     bvh = bvh;
 
     lights = [];
-    materials = materials;
+    materials = Iarray.of_list materials;
 
     emissive_triangles = Iarray.of_list emissive_triangles;
     background_color = background_color;
@@ -102,7 +102,7 @@ let rec ray_intersects_scene_triangles_rec ray scene triangle_list hit_record i 
         t = triangle_hit_record.t; 
         point = triangle_hit_record.point;
         normal = triangle_hit_record.normal;
-        material_index = List.nth scene.triangle_materials i;
+        material_index = Iarray.get scene.triangle_materials i;
       } in
       ray_intersects_scene_triangles_rec ray scene tail new_scene_hit_record (i+1)
     else

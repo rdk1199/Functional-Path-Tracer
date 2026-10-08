@@ -47,9 +47,9 @@ let ray_intersects_triangle ray triangle =
   let open Vector in
   let open Ray in
   let open Shape in
-  let edge1 = triangle.p3 -| triangle.p1 in
-  let edge2 = triangle.p2 -| triangle.p1 in
-  let normal = cross_product edge1 edge2 in
+  let edge1 = triangle.e1 in
+  let edge2 = triangle.e2 in
+  let normal = triangle.normal in
   let signed_normal = if dot normal ray.direction > 0. then ~-|normal else normal in
   let ray_cross_edge2 = cross_product ray.direction edge2 in
   let det = dot edge1 ray_cross_edge2 in
@@ -72,7 +72,7 @@ let ray_intersects_triangle ray triangle =
            hit = true;
            t = t; 
            point = ray.origin +| t *.| ray.direction;
-           normal = normalized signed_normal
+           normal = signed_normal
         }
         else
           null_hit

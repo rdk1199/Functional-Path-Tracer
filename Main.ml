@@ -33,18 +33,9 @@ let fov = 90.0
 
 let camera = create_camera camera_pos camera_forward camera_up width height focal_length fov
 
-let light_1 = {
-  color = {r = 1.0; g = 1.0; b=1.0};
-  intensity = 10.0;
-  position = {x = 0.0; y = -1.0; z = 2.0;};
-}
-
 let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/CornellBox.obj"
 let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/CornellBox.mtl" material_name_list
 let () = print_endline "Parsed obj and mtl!"
-
-
-
 
 
 let scene = create_scene triangle_list triangle_materials (build_bvh triangle_list triangle_materials) material_list Math.Color.black

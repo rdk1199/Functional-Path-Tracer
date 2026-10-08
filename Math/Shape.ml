@@ -3,7 +3,28 @@ type triangle = {
   p1 : Vector.vector3;
   p2 : Vector.vector3;
   p3 : Vector.vector3;
+
+  (**first edge (p2 - p1)*)
+  e1 : Vector.vector3;
+  (**second edge (p3 - p1)*)
+  e2 : Vector.vector3;
+
+  (**normal*)
+  normal : Vector.vector3;
 }
+
+let create_triangle p1 p2 p3 = 
+  let e1 = Vector.(p2 -| p1) in
+  let e2 = Vector.(p3 -| p1) in
+  {
+    p1 = p1;
+    p2 = p2;
+    p3 = p3;
+    e1 = e1;
+    e2 = e2;
+    normal = Vector.normalized (Vector.cross_product e1 e2);
+ }
+  
 
 (** Axis aligned bounding box*)
 type aabb = {

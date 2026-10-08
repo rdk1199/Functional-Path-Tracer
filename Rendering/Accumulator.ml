@@ -13,7 +13,7 @@ let simple_lambertian_accumulate ray scene (stop_prob:float) gen =
   if scene_hit_info.hit = false then
     (accum_color |+| (color_multiplier |*| scene.background_color), gen)
   else
-    let material = List.nth scene.materials scene_hit_info.material_index in
+    let material = Iarray.get scene.materials scene_hit_info.material_index in
     let base_color = material.base_color in
     let emissive = material.emissive in
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
@@ -49,7 +49,7 @@ let cos_lambertian_accumulate ray scene (stop_prob:float) gen =
   if scene_hit_info.hit = false then
     (accum_color |+| (color_multiplier |*| scene.background_color), gen)
   else
-    let material = List.nth scene.materials scene_hit_info.material_index in
+    let material = Iarray.get scene.materials scene_hit_info.material_index in
     let base_color = material.base_color in
     let emissive = material.emissive in
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in

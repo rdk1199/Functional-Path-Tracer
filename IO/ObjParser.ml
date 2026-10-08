@@ -94,7 +94,7 @@ let get_triangle_list vertex_array face_index_array =
           Iarray.get vertex_array face_tuple.i2, 
           Iarray.get vertex_array face_tuple.i3 
       in
-      let new_triangle = {Math.Shape.p1 = p1; Math.Shape.p2 = p2; Math.Shape.p3 = p3} in
+      let new_triangle = Math.Shape.create_triangle p1 p2 p3 in
       get_triangle_list_rec (i+1) vertex_array face_index_array (new_triangle :: triangle_list)
   in
   (**since we are prepending new triangles onto the list as it's built, we must reverse at the end
