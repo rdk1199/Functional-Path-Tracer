@@ -3,7 +3,7 @@ type scene = {
   (** list of indices -> sphere_materials[i] = index of i'th sphere's material in list*)
   sphere_materials : int list;
 
-  triangles : Math.Shape.triangle list;
+  triangles : Math.Shape.triangle Iarray.t;
   triangle_materials : int Iarray.t;
 
   bvh : Math.BoundingVolumeHierarchy.bvh;
@@ -31,7 +31,7 @@ let create_scene triangles triangle_materials bvh materials background_color =
     spheres = [];
     sphere_materials = [];
 
-    triangles = triangles;
+    triangles = Iarray.of_list triangles;
     triangle_materials = Iarray.of_list triangle_materials;
 
     bvh = bvh;

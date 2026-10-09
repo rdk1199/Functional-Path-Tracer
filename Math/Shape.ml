@@ -9,20 +9,23 @@ type triangle = {
   (**second edge (p3 - p1)*)
   e2 : Vector.vector3;
 
-  (**normal*)
   normal : Vector.vector3;
+
+  area : float;
 }
 
 let create_triangle p1 p2 p3 = 
   let e1 = Vector.(p2 -| p1) in
   let e2 = Vector.(p3 -| p1) in
+  let cross = Vector.cross_product e1 e2 in
   {
     p1 = p1;
     p2 = p2;
     p3 = p3;
     e1 = e1;
     e2 = e2;
-    normal = Vector.normalized (Vector.cross_product e1 e2);
+    normal = Vector.normalized (cross);
+    area = 0.5 *. (Vector.magnitude cross);
  }
   
 

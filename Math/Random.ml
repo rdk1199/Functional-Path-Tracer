@@ -49,6 +49,11 @@ let random_bind (f : 'a ->'a) = (fun x_gen_pair ->
   ((f (fst x_gen_pair)), snd x_gen_pair)
 )
 
+(**suffers from mod bias :( *)
+let rand_int_in_range low high gen = 
+  let (value, gen2) = pcg_32_rand gen in
+  (low + (value mod (high - low + 1)), gen2)
+
 let rand_0_1_float gen = 
   let (rand_int, new_gen) = pcg_32_rand gen in
   let out = (float_of_int rand_int) /. (float_of_int rand_max) in

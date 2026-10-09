@@ -12,8 +12,6 @@ let uniform_sample_triangle triangle gen =
     else
       (c1, c2)
   in
-  let e1 = triangle.p2 -| triangle.p1 in
-  let e2 = triangle.p3 -| triangle.p1 in
+  let e1 = triangle.e1 in
+  let e2 = triangle.e2 in
   (triangle.p1 +| (s *.| e1) +| (t *.| e2), gen3)
-
-  
