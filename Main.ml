@@ -81,7 +81,7 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_diffuse_accumulate 10 5
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_diffuse_accumulate 50 5
 
 let duration = Unix.gettimeofday() -. start_float
 

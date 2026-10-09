@@ -74,6 +74,7 @@ let cos_lambertian_accumulate ray scene (stop_prob:float) gen =
 
 (**Lambertian accumulator with multiple importance sampling of lights + BSDF*)
 let mis_diffuse_accumulate ray scene (stop_prob:float) gen =
+(**also carry a flag to determine whether this is an initial ray or reflected ray*)
 let rec mis_diffuse_accumulate_rec ray scene (stop_prob:float) gen initial =
   let open Math.Vector in
   let open Math.Ray in
