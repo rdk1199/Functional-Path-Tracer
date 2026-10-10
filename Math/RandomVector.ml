@@ -57,6 +57,6 @@ let rec cos_sample_hemisphere gen normal =
 
 
 (**probability that we would have chosen this direction with the cos sampler, for MIS weighting*)
-(**assume unit direction vector*)
+(**assume unit vectors*)
 let cos_sample_prob direction normal =
-  Float.max 0.0 (Vector.dot direction normal)
+  (Float.max 0.0 (Vector.dot direction normal)) /. Float.pi

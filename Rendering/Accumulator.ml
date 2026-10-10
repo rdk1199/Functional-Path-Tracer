@@ -103,26 +103,27 @@ let rec mis_diffuse_accumulate_rec ray scene (stop_prob:float) gen =
       let mis_light_weight = light_prob /. (light_prob +. cos_sample_prob) in
       let lambertian_brdf = (1.0 /. Float.pi) |*.| base_color in
 
-      let direct_contribution = terminate_weight *. direct_cos_theta *. mis_light_weight |*.| lambertian_brdf in    
+      let direct_contribution = (1.0/.light_prob) *. terminate_weight  *. direct_cos_theta *. mis_light_weight |*.| geo_term |*| lambertian_brdf in 
 
-      let (reflect_sample, gen4) = Math.RandomVector.cos_sample_hemisphere gen3 scene_hit_info.normal in   
+      let (reflect_dir, gen4) = Math.RandomVector.cos_sample_hemisphere gen3 scene_hit_info.normal in   
 
       (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
       let reflect_ray = {
         origin = scene_hit_info.point +| (Math.Util.epsilon *.| scene_hit_info.normal);
-        direction = reflect_sample;
+        direction = reflect_dir;
         refractive_index = ray.refractive_index;
         inside = ray.inside;
       }
       in
       (**compute MIS balance heuristic probability weights*)
-      let reflect_cos_sample_prob = Math.RandomVector.cos_sample_prob reflect_sample scene_hit_info.normal in
+      let reflect_cos_sample_prob = Math.RandomVector.cos_sample_prob reflect_dir scene_hit_info.normal in
       let light_sample_prob = World.SceneSampler.get_light_prob_for_ray reflect_ray scene in
       let mis_cos_sample_weight = reflect_cos_sample_prob /. (reflect_cos_sample_prob +. light_sample_prob) in
-      let (reflect_color, final_gen) = mis_diffuse_accumulate_rec reflect_ray scene stop_prob gen4 in
-      let indirect_cos_theta = Float.max 0.0 (Math.Vector.dot reflect_sample scene_hit_info.normal) in
 
-      let indirect_contribution =  terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| lambertian_brdf  in
+      let (reflect_color, final_gen) = mis_diffuse_accumulate_rec reflect_ray scene stop_prob gen4 in
+      let indirect_cos_theta = Float.max 0.0 (Math.Vector.dot reflect_dir scene_hit_info.normal) in
+
+      let indirect_contribution = (1.0 /. reflect_cos_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| lambertian_brdf |*| reflect_color in
       (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
 in  mis_diffuse_accumulate_rec ray scene stop_prob gen
 

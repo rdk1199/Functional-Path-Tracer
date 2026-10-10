@@ -81,12 +81,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_diffuse_accumulate 10 8
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_diffuse_accumulate 5 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_mis_diffuse_proper_brdf_test.ppm"
+let file_name = "mt_mis_diffuse_indirect_test.ppm"
 let _ = image_to_ppm final_image file_name
 
