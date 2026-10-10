@@ -26,6 +26,7 @@ type bvh_hit_info = {
   point : Vector.vector3;
   normal : Vector.vector3;
   material_index : int;
+  triangle : Shape.triangle;
 }
 
 let rec ray_intersects_bvh_rec ray bvh bvh_hit_info : bvh_hit_info = 
@@ -38,6 +39,7 @@ let rec ray_intersects_bvh_rec ray bvh bvh_hit_info : bvh_hit_info =
       point = hit_info.point;
       normal = hit_info.normal;
       material_index = material_index;
+      triangle = triangle;
     }
     
   | Node (bvhs, aabb) ->
@@ -75,6 +77,7 @@ let ray_intersects_bvh ray bvh =
     point = Vector.zero_vec;
     normal = Vector.zero_vec;
     material_index = -1;
+    triangle = Shape.null_triangle;
   }
   in
   ray_intersects_bvh_rec ray bvh null_bvh_hit

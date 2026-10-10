@@ -5,6 +5,7 @@ type material = {
   refractive_index : float;
   opacity : float;
   emissive: Math.Color.color;
+  fresnel: Math.Color.color;
 }
 
 let default_material = {
@@ -14,6 +15,7 @@ let default_material = {
   refractive_index = 0.0;
   opacity = 0.0;
   emissive = Math.Color.black;
+  fresnel = Math.Color.(0.04 |*.| Math.Color.ones); (**temporary value*)
 }
 
 let convert_specular_exponent_to_shininess spec_exp =

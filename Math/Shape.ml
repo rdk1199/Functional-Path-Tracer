@@ -28,6 +28,16 @@ let create_triangle p1 p2 p3 =
     area = 0.5 *. (Vector.magnitude cross);
  }
   
+let null_triangle = {
+    p1 = Vector.zero_vec;
+    p2 = Vector.zero_vec;
+    p3 = Vector.zero_vec;
+    e1 = Vector.zero_vec;
+    e2 = Vector.zero_vec;
+    normal = Vector.zero_vec;
+    area = 0.0;
+  }
+
 
 (** Axis aligned bounding box*)
 type aabb = {

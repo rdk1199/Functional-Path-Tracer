@@ -52,6 +52,7 @@ type scene_hit_record = {
   point : Math.Vector.vector3;
   normal : Math.Vector.vector3;
   material_index : int;
+  triangle : Math.Shape.triangle;
 }
 
 (**default scene hit record (no hit)*)
@@ -60,7 +61,8 @@ let default_scene_hit = {
   t = 0.0; 
   point = {x = 0.0; y = 0.0; z=0.0}; 
   normal = {x = 0.0; y =0.0; z=0.0}; 
-  material_index = 0
+  material_index = 0;
+  triangle = Math.Shape.null_triangle;
 } 
 
 (**hit_record is the hit record for the CLOSEST hit we've had so far*)
@@ -80,34 +82,12 @@ let rec ray_intersects_scene_spheres_rec ray scene sphere_list hit_record i =
         point = sphere_hit_record.point;
         normal = sphere_hit_record.normal;
         material_index = List.nth scene.sphere_materials i;
+        triangle = Math.Shape.null_triangle;
       } in
       ray_intersects_scene_spheres_rec ray scene tail new_scene_hit_record (i+1)
     else
       (**no hit or object is farther from object we already hit*)
       ray_intersects_scene_spheres_rec ray scene tail hit_record (i+1)
-
-(**hit_record is the hit record for the CLOSEST hit we've had so far*)
-(** i is the current index of where we are in the list, for matching triangles to their materials*)
-let rec ray_intersects_scene_triangles_rec ray scene triangle_list hit_record i =
-  match triangle_list with
-    (**end of list - we're done*)
-  | [] -> hit_record
-  | triangle :: tail ->
-    let triangle_hit_record = Math.Intersection.ray_intersects_triangle ray triangle in
-    if triangle_hit_record.hit && (triangle_hit_record.t < hit_record.t || hit_record.hit = false) then
-      (**hit a closer object*)
-      let new_scene_hit_record = 
-      {
-        hit = true; 
-        t = triangle_hit_record.t; 
-        point = triangle_hit_record.point;
-        normal = triangle_hit_record.normal;
-        material_index = Iarray.get scene.triangle_materials i;
-      } in
-      ray_intersects_scene_triangles_rec ray scene tail new_scene_hit_record (i+1)
-    else
-      (**no hit or object is farther from object we already hit*)
-      ray_intersects_scene_triangles_rec ray scene tail hit_record (i+1)
 
 let rec ray_intersects_scene_bvh ray scene =
   let bvh_hit_record = Math.BoundingVolumeHierarchy.ray_intersects_bvh ray scene.bvh in
@@ -119,6 +99,7 @@ let rec ray_intersects_scene_bvh ray scene =
       normal = bvh_hit_record.normal;
       (**TODO: get material!*)
       material_index = bvh_hit_record.material_index;
+      triangle = bvh_hit_record.triangle;
     }
   else
     default_scene_hit

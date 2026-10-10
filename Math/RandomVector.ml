@@ -54,3 +54,9 @@ let rec cos_sample_hemisphere gen normal =
   else
     let () = print_endline "looping" in
     cos_sample_hemisphere gen3 normal
+
+
+(**probability that we would have chosen this direction with the cos sampler, for MIS weighting*)
+(**assume unit direction vector*)
+let cos_sample_prob direction normal =
+  Float.max 0.0 (Vector.dot direction normal)
