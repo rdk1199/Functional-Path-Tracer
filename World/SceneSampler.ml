@@ -7,7 +7,7 @@ let compute_geometric_term_for_light_sample scene origin light_point light_norma
   let origin_to_light = light_point -| origin in
   let light_to_origin = ~-|origin_to_light in
   let signed_light_normal = if dot origin_to_light light_normal > 0. then ~-| light_normal else light_normal in
-  let cos_angle_between = cos_angle_between light_to_origin signed_light_normal in
+  let cos_angle_between = Float.max 0.0 (cos_angle_between light_to_origin signed_light_normal) in
   let sq_distance = square_magnitude origin_to_light in
   let origin_to_light_ray = {
     origin = origin;
@@ -19,13 +19,13 @@ let compute_geometric_term_for_light_sample scene origin light_point light_norma
   let scene_hit = Scene.ray_intersects_scene origin_to_light_ray scene in
   if scene_hit.hit && square_magnitude (scene_hit.point -| origin) < (sq_distance -. Math.Util.epsilon) then
     (**no hit or hit occluded*)
-    Math.Color.black
+    0.0, Math.Color.black
   else
+     let material = Iarray.get scene.materials scene_hit.material_index in
     if sq_distance < Math.Util.epsilon then
-      {Math.Color.r = Float.max_float; Math.Color.g = Float.max_float; Math.Color.b = Float.max_float;}
+      Float.max_float, material.emissive
     else
-      let material = Iarray.get scene.materials scene_hit.material_index in
-      (cos_angle_between /. sq_distance) |*.| material.emissive
+      ((cos_angle_between /. sq_distance), material.emissive)
 
 (**for a given triangle light, return probability of hitting a particular point on that light i.e. 1/(num_lights * area)*)
 (**triangle_index should be the index of an emissive triangle*)
@@ -48,8 +48,8 @@ let uniform_sample_light scene origin gen =
   let emissive_tri_index = Iarray.get scene.Scene.emissive_triangles sample_index in
   let emissive_tri = Iarray.get scene.Scene.triangles emissive_tri_index in
   let (point, gen3) = (Math.Sampler.uniform_sample_triangle emissive_tri gen2) in
-  let geo_term = compute_geometric_term_for_light_sample scene origin point emissive_tri.normal in
-  (point, get_light_prob scene emissive_tri_index, geo_term, gen3)
+  let geo_term, emissive = compute_geometric_term_for_light_sample scene origin point emissive_tri.normal in
+  (point, (get_light_prob scene emissive_tri_index), geo_term, emissive, gen3)
 
 
 (**given a ray, compute the probability that the uniform light sampler would pick the point it hits*)

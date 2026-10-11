@@ -87,6 +87,6 @@ let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_mis_diffuse_indirect_test.ppm"
+let file_name = "mt_mis_diffuse_change_with_geo_term_test.ppm"
 let _ = image_to_ppm final_image file_name
 
