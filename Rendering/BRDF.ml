@@ -33,8 +33,7 @@ let ggx_fresnel_term fresnel_term direction half_vector =
   let open Math.Vector in
   let open Math.Color in
   let l_dot_h = dot direction half_vector in
-  let l_dot_h_5 = l_dot_h ** 5.0 in
-  fresnel_term |+| ((1.0 -. l_dot_h_5) |*.| (Math.Color.ones |-| fresnel_term)) 
+  fresnel_term |+| (((1.0 -. l_dot_h) ** 5.0) |*.| (Math.Color.ones |-| fresnel_term)) 
 
 let ggx_spec unit_view unit_light half_vector normal shininess fresnel  =
   let open Math.Vector in
