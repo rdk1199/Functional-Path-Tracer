@@ -81,12 +81,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.ggx_accumulate 20 5
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_accumulate 10 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_cornell_box_ggx_no_mis_check.ppm"
+let file_name = "mt_cornell_box_ggx_mis_check.ppm"
 let _ = image_to_ppm final_image file_name
 

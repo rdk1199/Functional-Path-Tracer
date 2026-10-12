@@ -32,7 +32,7 @@ let ggx_geometric_term view_direction outgoing normal alpha_squared =
 let ggx_fresnel_term fresnel_term direction half_vector =
   let open Math.Vector in
   let open Math.Color in
-  let l_dot_h = dot direction half_vector in
+  let l_dot_h = positive_dot direction half_vector in
   fresnel_term |+| (((1.0 -. l_dot_h) ** 5.0) |*.| (Math.Color.ones |-| fresnel_term)) 
 
 let ggx_spec unit_view unit_light half_vector normal shininess fresnel  =
@@ -78,6 +78,7 @@ let cook_torrance_brdf view_direction to_light normal material =
 let rec ggx_sample_hemisphere gen normal view_dir alpha_squared =
 
   let open Math.Vector in
+  
   let (r1, gen2) = Math.Random.rand_0_1_float gen in
   let (r2, gen3) = Math.Random.rand_0_1_float gen2 in
   let phi = 2.0 *. Float.pi *. r2 in
@@ -100,10 +101,12 @@ let rec ggx_sample_hemisphere gen normal view_dir alpha_squared =
   in
   let half_vec = Math.Transform.tangent_to_world_space initial_half_vec normal in
   let final_vec = Math.Geometry.reflect (~-|view_dir) half_vec in
+  
 
 if is_nan_vector final_vec then
   print_endline "NaN GGX sample generated!";
 (final_vec, gen3)
+
 
 let cook_torrance_sample gen unit_view normal alpha_squared =
   let specular_sample, gen2 = Math.Random.rand_flip (1.0 -. alpha_squared) gen in
@@ -125,7 +128,7 @@ let ggx_sample_prob vector view_direction alpha_squared normal =
   let denom = 4.0 *. (positive_dot unit_vector half_vector) *. Float.pi *. ((alpha_squared -. 1.0) *. (cos_theta_m ** 2.0) +. 1.0) ** 2.0 in
 
   if denom < Math.Util.epsilon then 
-    0.0
+    Float.max_float
   else
   numerator/.denom
 
