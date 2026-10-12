@@ -32,6 +32,10 @@ let (|*.|) (k:float) (c:color) : color = {r = k *. c.r; g = k *. c.g; b = k *. c
 
 let color_sq_magnitude (c:color) = c.r *. c.r +. c.g *. c.g +. c.b *. c.b
 
+let color_is_nan (c:color) = (Float.is_nan c.r) || (Float.is_nan c.g) || (Float.is_nan c.b)
+
+let color_of_float x : color = {r = x; g = x; b = x}
+
 let clamp_color (color : color) : color = {
   r = Util.clamp color.r 0.0 255.0;
   g = Util.clamp color.g 0.0 255.0;

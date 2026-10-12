@@ -27,14 +27,14 @@ let test_image = IO.Image.create_image width height red
 
 let camera_pos = {x = 0.0; y = -2.0; z = 1.0;}
 let camera_forward = {x = 0.0; y = 1.0; z = 0.0;}
-let camera_up = {x = 0.0; y = 0.0; z = 1.0;}
+let camera_up = {x = 0.0; y = 0.0; z = 2.0;}
 let focal_length = 1.0
 let fov = 90.0
 
 let camera = create_camera camera_pos camera_forward camera_up width height focal_length fov
 
-let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/CornellBox.obj"
-let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/CornellBox.mtl" material_name_list
+let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/GlossyCornellBox.obj"
+let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/GlossyCornellBox.mtl" material_name_list
 let () = print_endline "Parsed obj and mtl!"
 
 
@@ -81,12 +81,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_accumulate 5 5
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.ggx_accumulate 20 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_mis_ggx_test.ppm"
+let file_name = "mt_cornell_box_ggx_no_mis_check.ppm"
 let _ = image_to_ppm final_image file_name
 

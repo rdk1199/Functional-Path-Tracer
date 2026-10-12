@@ -100,6 +100,7 @@ let rec mis_diffuse_accumulate_rec ray scene (stop_prob:float) gen =
       let to_light_dir = normalized  (light_point -| scene_hit_info.point) in
       let direct_cos_theta = Float.max (Math.Vector.dot scene_hit_info.normal to_light_dir) 0.0 in
       let cos_sample_prob = Math.RandomVector.cos_sample_prob to_light_dir scene_hit_info.normal in
+      (**light area probs have to be converted to solid angle probs by dividing by geo_term (or equivalently multiplying cos_sample_prob by geo_term)*)
       let mis_light_weight = light_area_prob /. (light_area_prob +. (cos_sample_prob *. geo_term)) in
       let lambertian_brdf = (1.0 /. Float.pi) |*.| base_color in
 
@@ -127,6 +128,72 @@ let rec mis_diffuse_accumulate_rec ray scene (stop_prob:float) gen =
       (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
 in  mis_diffuse_accumulate_rec ray scene stop_prob gen
 
+
+(**Cook-Torrance GGX accumulator with multiple importance sampling of lights + BSDF*)
+let ggx_accumulate ray scene (stop_prob:float) gen =
+(**also carry a flag to determine whether this is an initial ray or reflected ray*)
+let rec ggx_accumulate_rec ray scene (stop_prob:float) gen =
+  let open Math.Vector in
+  let open Math.Ray in
+  let open Math.Color in
+  let scene_hit_info = World.Scene.ray_intersects_scene ray scene in
+  if scene_hit_info.hit = false then
+    (scene.background_color, gen)
+  else
+    let material = Iarray.get scene.materials scene_hit_info.material_index in
+    let emissive = material.emissive in
+    let view_dir = ~-|(normalized ray.direction) in
+    let alpha_squared = (1.0 -. material.shininess) ** 2.0 in
+    
+    let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
+    if stop then
+      (emissive, gen2)
+    else
+      let terminate_weight = compute_termination_weight stop_prob in
+      (**light sample*)
+      let new_ray_origin = scene_hit_info.point +| (Math.Util.epsilon *.| scene_hit_info.normal) in
+
+    
+      let (reflect_dir, gen3) = BRDF.cook_torrance_sample gen2 view_dir scene_hit_info.normal alpha_squared in
+
+      (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
+      let reflect_ray = {
+        origin = new_ray_origin;
+        direction = reflect_dir;
+        refractive_index = ray.refractive_index;
+        inside = ray.inside;
+      }
+      in
+      (**compute MIS balance heuristic probability weights*)
+      let reflect_cook_torrance_sample_prob = BRDF.cook_torrance_sample_prob reflect_dir view_dir alpha_squared scene_hit_info.normal in
+
+      let (reflect_color, final_gen) = ggx_accumulate_rec reflect_ray scene stop_prob gen3 in
+      let indirect_cos_theta = Math.Vector.positive_dot reflect_dir scene_hit_info.normal in
+
+      let reflect_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir reflect_dir scene_hit_info.normal material in
+
+      let adjusted_reflect_ct_sample_prob = 
+        if reflect_cook_torrance_sample_prob < Math.Util.epsilon then
+          Math.Util.epsilon
+        else
+          reflect_cook_torrance_sample_prob
+      in
+
+      let indirect_contribution = (1.0 /. adjusted_reflect_ct_sample_prob) *. terminate_weight *. indirect_cos_theta |*.| reflect_cook_torrance_brdf |*| reflect_color in
+      
+      if color_is_nan reflect_cook_torrance_brdf then
+        print_endline "reflect CT BRDF is nan!";
+
+      if color_is_nan indirect_contribution then
+        print_endline "indirect contribution is nan!";
+
+      if Math.Color.color_is_nan indirect_contribution then
+        print_endline "NaN Color found!";
+      
+      (emissive |+| indirect_contribution, final_gen)
+in  ggx_accumulate_rec ray scene stop_prob gen
+
+
 (**Cook-Torrance GGX accumulator with multiple importance sampling of lights + BSDF*)
 let mis_ggx_accumulate ray scene (stop_prob:float) gen =
 (**also carry a flag to determine whether this is an initial ray or reflected ray*)
@@ -141,6 +208,7 @@ let rec mis_ggx_accumulate_rec ray scene (stop_prob:float) gen =
     let material = Iarray.get scene.materials scene_hit_info.material_index in
     let emissive = material.emissive in
     let view_dir = ~-|(normalized ray.direction) in
+    let alpha_squared = (1.0 -. material.shininess) ** 2.0 in
     
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
     if stop then
@@ -154,14 +222,23 @@ let rec mis_ggx_accumulate_rec ray scene (stop_prob:float) gen =
       let (light_point, light_area_prob, geo_term, light_emissive, gen3) = World.SceneSampler.uniform_sample_light scene new_ray_origin gen2 in
       let to_light_dir = normalized  (light_point -| scene_hit_info.point) in
       let direct_cos_theta = Float.max (Math.Vector.dot scene_hit_info.normal to_light_dir) 0.0 in
-      let cos_sample_prob = Math.RandomVector.cos_sample_prob to_light_dir scene_hit_info.normal in
-      let mis_light_weight = light_area_prob /. (light_area_prob +. (cos_sample_prob *. geo_term)) in
+      let cook_torrance_light_sample_prob = BRDF.cook_torrance_sample_prob to_light_dir view_dir alpha_squared scene_hit_info.normal in
+
+      let mis_light_weight = 
+        if (light_area_prob +. (cook_torrance_light_sample_prob *. geo_term)) > Math.Util.epsilon then
+          light_area_prob /. (light_area_prob +. (cook_torrance_light_sample_prob *. geo_term))
+        else
+          0.0
+      in
 
       let light_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir to_light_dir scene_hit_info.normal material in
 
       let direct_contribution = (1.0/.light_area_prob) *. terminate_weight  *. direct_cos_theta *. mis_light_weight *. geo_term |*.| light_emissive |*| light_cook_torrance_brdf in 
 
-      let (reflect_dir, gen4) = Math.RandomVector.cos_sample_hemisphere gen3 scene_hit_info.normal in   
+      if color_is_nan direct_contribution then
+        print_endline "direct contribution is nan!";
+
+      let (reflect_dir, gen4) = BRDF.cook_torrance_sample gen3 view_dir scene_hit_info.normal alpha_squared in
 
       (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
       let reflect_ray = {
@@ -172,73 +249,38 @@ let rec mis_ggx_accumulate_rec ray scene (stop_prob:float) gen =
       }
       in
       (**compute MIS balance heuristic probability weights*)
-      let reflect_cos_sample_prob = Math.RandomVector.cos_sample_prob reflect_dir scene_hit_info.normal in
+      let reflect_cook_torrance_sample_prob = BRDF.cook_torrance_sample_prob reflect_dir view_dir alpha_squared scene_hit_info.normal in
       let light_sample_prob = World.SceneSampler.get_light_prob_for_ray reflect_ray scene in
-      let mis_cos_sample_weight = reflect_cos_sample_prob /. (reflect_cos_sample_prob +. light_sample_prob) in
+
+      let mis_cos_sample_weight = 
+        if reflect_cook_torrance_sample_prob +. light_sample_prob > Math.Util.epsilon then
+          reflect_cook_torrance_sample_prob /. (reflect_cook_torrance_sample_prob +. light_sample_prob)
+        else
+          0.0
+      in
 
       let (reflect_color, final_gen) = mis_ggx_accumulate_rec reflect_ray scene stop_prob gen4 in
-      let indirect_cos_theta = Float.max 0.0 (Math.Vector.dot reflect_dir scene_hit_info.normal) in
+      let indirect_cos_theta = Math.Vector.positive_dot reflect_dir scene_hit_info.normal in
 
       let reflect_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir reflect_dir scene_hit_info.normal material in
 
-      let indirect_contribution = (1.0 /. reflect_cos_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| reflect_cook_torrance_brdf |*| reflect_color in
+      let adjusted_reflect_ct_sample_prob = 
+        if reflect_cook_torrance_sample_prob < Math.Util.epsilon then
+          Math.Util.epsilon
+        else
+          reflect_cook_torrance_sample_prob
+      in
+
+      let indirect_contribution = (1.0 /. adjusted_reflect_ct_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| reflect_cook_torrance_brdf |*| reflect_color in
+      
+      if color_is_nan reflect_cook_torrance_brdf then
+        print_endline "reflect CT BRDF is nan!";
+
+      if color_is_nan indirect_contribution then
+        print_endline "indirect contribution is nan!";
+
+      if Math.Color.color_is_nan indirect_contribution then
+        print_endline "NaN Color found!";
+      
       (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
 in  mis_ggx_accumulate_rec ray scene stop_prob gen
-
-(**
-(**Cook-Torrance BRDF with GGX distribution function*)
-let mis_ggx_accumulate ray scene (stop_prob:float) gen =
-(**also carry a flag to determine whether this is an initial ray or reflected ray*)
-let rec mis_ggx_accumulate_rec ray scene (stop_prob:float) gen =
-  let open Math.Vector in
-  let open Math.Ray in
-  let open Math.Color in
-  let scene_hit_info = World.Scene.ray_intersects_scene ray scene in
-  if scene_hit_info.hit = false then
-    (scene.background_color, gen)
-  else
-    let material = Iarray.get scene.materials scene_hit_info.material_index in
-    let emissive = material.emissive in
-    let view_dir = ~-|(normalized ray.direction) in
-    
-    let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
-    if stop then
-      (emissive, gen2)
-    else
-      let terminate_weight = compute_termination_weight stop_prob in
-      (**light sample*)
-      let new_ray_origin = scene_hit_info.point +| (Math.Util.epsilon *.| scene_hit_info.normal) in
-
-      (**sample a point on a light*)
-      let (light_point, light_prob, light_emissive, gen3) = World.SceneSampler.uniform_sample_light scene new_ray_origin gen2 in
-      let to_light_dir = normalized  (light_point -| scene_hit_info.point) in
-      let direct_cos_theta = Float.max (Math.Vector.dot scene_hit_info.normal to_light_dir) 0.0 in
-      let cos_sample_prob = Math.RandomVector.cos_sample_prob to_light_dir scene_hit_info.normal in
-      let mis_light_weight = light_prob /. (light_prob +. cos_sample_prob) in
-      let light_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir to_light_dir scene_hit_info.normal material in
-
-      let direct_contribution = (1.0/.light_prob) *. terminate_weight  *. direct_cos_theta *. mis_light_weight |*.| light_emissive |*| light_cook_torrance_brdf in 
-
-      let (reflect_dir, gen4) = Math.RandomVector.cos_sample_hemisphere gen3 scene_hit_info.normal in   
-
-      (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
-      let reflect_ray = {
-        origin = scene_hit_info.point +| (Math.Util.epsilon *.| scene_hit_info.normal);
-        direction = reflect_dir;
-        refractive_index = ray.refractive_index;
-        inside = ray.inside;
-      }
-      in
-      (**compute MIS balance heuristic probability weights*)
-      let reflect_cos_sample_prob = Math.RandomVector.cos_sample_prob reflect_dir scene_hit_info.normal in
-      let light_sample_prob = World.SceneSampler.get_light_prob_for_ray reflect_ray scene in
-      let mis_cos_sample_weight = reflect_cos_sample_prob /. (reflect_cos_sample_prob +. light_sample_prob) in
-
-      let (reflect_color, final_gen) = mis_ggx_accumulate_rec reflect_ray scene stop_prob gen4 in
-      let indirect_cos_theta = Float.max 0.0 (Math.Vector.dot reflect_dir scene_hit_info.normal) in
-
-      let reflect_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir reflect_dir scene_hit_info.normal material in
-
-      let indirect_contribution = (1.0 /. reflect_cos_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| reflect_cook_torrance_brdf |*| reflect_color in
-      (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
-in  mis_ggx_accumulate_rec ray scene stop_prob gen*)

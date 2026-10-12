@@ -17,6 +17,23 @@ let rec random_unit_vector_in_hemisphere gen v =
   else
     random_unit_vector_in_hemisphere gen2 v
 
+(**if v is a vector sampled randomly in a hemisphere, then we can reorient it into the hemisphere centered around normal*)
+let orient_vector_in_hemisphere v normal =
+  let open Vector in
+  (**how much to rotate - assume normal is unit vector*)
+  let rot = Float.acos (dot normal Vector.up) in
+  let cross = cross_product Vector.up normal in
+  let axis =
+    if square_magnitude cross < Util.epsilon then
+      {x=1.0; y=0.0; z=0.0}
+    else
+      normalized cross
+  in
+  (**Rodrigues rotation formula*)
+  ((Float.cos rot) *.| v) +| 
+  ((Float.sin rot) *.| (cross_product axis v)) +|
+  (((1.0 -. (Float.cos rot)) *. (dot axis v)) *.| axis)
+
 (**randomly sample in hemisphere around normal, weighted by cosine*)
 (**due to precision ranges, we may accidentally sample the edge of the 
 hemisphere - resample in that case*)
@@ -34,27 +51,15 @@ let rec cos_sample_hemisphere gen normal =
   }
   in
 
-  (**how much to rotate - assume normal is unit vector*)
-  let rot = Float.acos (dot normal Vector.up) in
-  let cross = cross_product Vector.up normal in
-  let axis =
-    if square_magnitude cross < Util.epsilon then
-      {x=1.0; y=0.0; z=0.0}
-    else
-      normalized cross
-  in
-  (**Rodrigues rotation formula*)
+  (**orient into the correct hemisphere*)
   let try_vec = 
-    ((Float.cos rot) *.| initial_vec) +| 
-    ((Float.sin rot) *.| (cross_product axis initial_vec)) +|
-    (((1.0 -. (Float.cos rot)) *. (dot axis initial_vec)) *.| axis)
+    orient_vector_in_hemisphere initial_vec normal
   in
   if dot try_vec normal > Util.epsilon then
     (normalized try_vec, gen3)
   else
     let () = print_endline "looping" in
     cos_sample_hemisphere gen3 normal
-
 
 (**probability that we would have chosen this direction with the cos sampler, for MIS weighting*)
 (**assume unit vectors*)

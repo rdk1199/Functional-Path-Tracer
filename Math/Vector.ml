@@ -31,6 +31,18 @@ let zero_vec = {
     z = 0.0
 }
 
+let vector_up = {
+    x = 0.0;
+    y = 0.0;
+    z = 1.0;
+}
+
+let vector_right = {
+    x = 1.0;
+    y = 0.0;
+    z = 0.0;
+}
+
 let vector3_pointwise_fun v1 v2 f = {
     x = f v1.x v2.x;
     y = f v1.y v2.y;
@@ -41,7 +53,17 @@ let vector3_min v1 v2 = vector3_pointwise_fun v1 v2 Float.min
 let vector3_max v1 v2 = vector3_pointwise_fun v1 v2 Float.max
 
 
+let is_nan_vector v = (Float.is_nan v.x) || (Float.is_nan v.y) || (Float.is_nan v.z)
+
 let dot v1 v2 = v1.x *. v2.x +. v1.y *. v2.y +. v1.z *. v2.z
+
+(**returns dot product if it is positive, 0 otherwise*)
+let positive_dot v1 v2 = 
+    let dot_product = dot v1 v2 in
+    if dot_product > Util.epsilon then 
+        dot_product
+    else
+        0.0
 
 let square_magnitude v = dot v v
 
