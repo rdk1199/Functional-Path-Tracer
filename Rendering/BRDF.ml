@@ -1,16 +1,12 @@
 
-(**assumes all unit vectors*)
-let normalized_half_vector v1 v2 =
-  let open Math.Vector in
-  let magnitude_of_sum = magnitude (v1 +| v2) in
-  (1.0 /. magnitude_of_sum) *.| (v1 +| v2)
+
 
 let ggx_normal_distribution half_vector normal alpha_squared =
   let open Math.Vector in
   let n_dot_half = dot normal half_vector in
   let denominator = Float.pi *. ((n_dot_half ** 2.0)*.(alpha_squared -. 1.0) +. 1.0) ** 2.0 in
   if denominator < Math.Util.epsilon then
-    0.0
+    1.0
   else
     alpha_squared /. denominator
 
@@ -23,24 +19,16 @@ let ggx_geometric_term view_direction outgoing normal alpha_squared =
     in
   let denom = (denom_term view_direction outgoing) +. (denom_term outgoing view_direction) in
   if denom < Math.Util.epsilon then
-    0.0
+    1.0
   else
     Float.min (numerator/.denom) 1.0
-
-
-(**schlick approximation - assume vectors are unit*)
-let ggx_fresnel_term fresnel_term direction half_vector =
-  let open Math.Vector in
-  let open Math.Color in
-  let l_dot_h = positive_dot direction half_vector in
-  fresnel_term |+| (((1.0 -. l_dot_h) ** 5.0) |*.| (Math.Color.ones |-| fresnel_term)) 
 
 let ggx_spec unit_view unit_light half_vector normal shininess fresnel  =
   let open Math.Vector in
   let open Math.Color in
   (**TODO: storing roughness instead of shininess directly saves a subtraction*)
   let alpha_squared = (1.0 -. shininess) ** 2.0 in
-  let fresnel_term = ggx_fresnel_term fresnel unit_light half_vector in
+  let fresnel_term = Math.Geometry.fresnel_term fresnel unit_light half_vector in
   let geo_term = ggx_geometric_term unit_view unit_light normal alpha_squared in
   let normal_term = ggx_normal_distribution half_vector normal alpha_squared in
   let n_dot_view = positive_dot unit_view normal in
@@ -58,8 +46,8 @@ let cook_torrance_brdf view_direction to_light normal material =
   let open World.Material in
   let unit_view = normalized view_direction in
   let unit_light = normalized to_light in 
-  let half_vector = normalized_half_vector unit_view unit_light in
-  let ks = ggx_fresnel_term material.fresnel unit_view half_vector in
+  let half_vector = Math.Geometry.normalized_half_vector unit_view unit_light in
+  let ks = Math.Geometry.fresnel_term material.fresnel unit_view half_vector in
  
   let ggx_spec = ggx_spec unit_view unit_light half_vector normal material.shininess material.fresnel in
   let specular_term = ggx_spec  in
@@ -76,31 +64,33 @@ let cook_torrance_brdf view_direction to_light normal material =
   diffuse_term |+| specular_term 
 
 let rec ggx_sample_hemisphere gen normal view_dir alpha_squared =
-
   let open Math.Vector in
-  
-  let (r1, gen2) = Math.Random.rand_0_1_float gen in
-  let (r2, gen3) = Math.Random.rand_0_1_float gen2 in
-  let phi = 2.0 *. Float.pi *. r2 in
-  let radicand_denom = r1 *. (alpha_squared -. 1.0) +. 1.0 in
-
-  if radicand_denom < Math.Util.epsilon then
-    (**reject problematic samples*)
-    ggx_sample_hemisphere gen3 normal view_dir alpha_squared
+  if alpha_squared < Math.Util.epsilon then
+    (**perfect reflection*)
+    (Math.Geometry.reflect (~-| view_dir) normal , gen)
   else
-    let radicand = (1.0 -. r1) /. radicand_denom in
-    let cos_theta = Float.sqrt radicand in
-    let theta = Float.acos cos_theta in
-    let sin_theta = Float.sin theta in
-    let initial_half_vec = {
-      x = (Float.cos phi) *. sin_theta;
-      y = (Float.sin phi) *. sin_theta;
-      z = cos_theta;
-    }
+    let (r1, gen2) = Math.Random.rand_0_1_float gen in
+    let (r2, gen3) = Math.Random.rand_0_1_float gen2 in
+    let phi = 2.0 *. Float.pi *. r2 in
+    let radicand_denom = r1 *. (alpha_squared -. 1.0) +. 1.0 in
 
-  in
-  let half_vec = Math.Transform.tangent_to_world_space initial_half_vec normal in
-  let final_vec = Math.Geometry.reflect (~-|view_dir) half_vec in
+    if radicand_denom < Math.Util.epsilon then
+      (**reject problematic samples*)
+      ggx_sample_hemisphere gen3 normal view_dir alpha_squared
+    else
+      let radicand = (1.0 -. r1) /. radicand_denom in
+      let cos_theta = Float.sqrt radicand in
+      let theta = Float.acos cos_theta in
+      let sin_theta = Float.sin theta in
+      let initial_half_vec = {
+        x = (Float.cos phi) *. sin_theta;
+        y = (Float.sin phi) *. sin_theta;
+        z = cos_theta;
+      }
+
+    in
+    let half_vec = Math.Transform.tangent_to_world_space initial_half_vec normal in
+    let final_vec = Math.Geometry.reflect (~-|view_dir) half_vec in
   
 
 if is_nan_vector final_vec then
@@ -118,19 +108,27 @@ let cook_torrance_sample gen unit_view normal alpha_squared =
 (**given vector, determine the probability that the ggx sampler would have picked it*)
 let ggx_sample_prob vector view_direction alpha_squared normal =
   let open Math.Vector in
-  let unit_view = normalized view_direction in
-  let unit_vector = normalized vector in
-  let half_vector = normalized_half_vector unit_view unit_vector in
-
-  let cos_theta_m = positive_dot normal half_vector in
-
-  let numerator = alpha_squared *. cos_theta_m in
-  let denom = 4.0 *. (positive_dot unit_vector half_vector) *. Float.pi *. ((alpha_squared -. 1.0) *. (cos_theta_m ** 2.0) +. 1.0) ** 2.0 in
-
-  if denom < Math.Util.epsilon then 
-    Float.max_float
+  if alpha_squared < Math.Util.epsilon then
+    (**perfect reflection*)
+    let reflect = Math.Geometry.reflect (~-| view_direction) normal in
+    if square_magnitude (reflect -| vector) < Math.Util.epsilon then
+      1.0
+    else
+      Math.Util.epsilon
   else
-  numerator/.denom
+    let unit_view = normalized view_direction in
+    let unit_vector = normalized vector in
+    let half_vector = Math.Geometry.normalized_half_vector unit_view unit_vector in
+
+    let cos_theta_m = positive_dot normal half_vector in
+
+    let numerator = alpha_squared *. cos_theta_m in
+    let denom = 4.0 *. (positive_dot unit_vector half_vector) *. Float.pi *. ((alpha_squared -. 1.0) *. (cos_theta_m ** 2.0) +. 1.0) ** 2.0 in
+
+    if denom < Math.Util.epsilon then 
+      Float.max_float
+    else
+    numerator/.denom
 
 
 let cook_torrance_sample_prob vector view_dir alpha_squared normal =

@@ -33,8 +33,8 @@ let fov = 90.0
 
 let camera = create_camera camera_pos camera_forward camera_up width height focal_length fov
 
-let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/GlossyCornellBox.obj"
-let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/GlossyCornellBox.mtl" material_name_list
+let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/GlassCornellBox.obj"
+let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/GlassCornellBox.mtl" material_name_list
 let () = print_endline "Parsed obj and mtl!"
 
 
@@ -81,12 +81,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_accumulate 5 5
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_refract_accumulate 2 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_cornell_box_ggx_mis_check.ppm"
+let file_name = "mt_cornell_box_ggx_refract_glass_mis_check.ppm"
 let _ = image_to_ppm final_image file_name
 
