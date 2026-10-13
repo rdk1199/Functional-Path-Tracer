@@ -13,11 +13,20 @@ let parse_mtl_line line current_material_name_list current_material_list =
     in
     let new_material = {(List.hd current_material_list) with base_color = base_color} in
     (current_material_name_list, new_material :: (List.tl current_material_list))
-  else if String.sub line 0 3 = "Ns " then
-    (**Specular exponent - convert to shininess*)
-    let spec_exp = Scanf.sscanf line "Ns %f" ( fun exp -> exp ) in
-    let shininess = World.Material.convert_specular_exponent_to_shininess spec_exp in
-    let new_material = {(List.hd current_material_list) with shininess = shininess} in
+  else if String.sub line 0 3 = "Pr " then
+    (**Roughness - convert to shininess*)
+    (**TODO: turn shininess field to roughness in Material record*)
+    let roughness = Scanf.sscanf line "Pr %f" ( fun r -> r ) in
+    print_endline (string_of_float roughness);
+    let new_material = {(List.hd current_material_list) with shininess = 1.0 -. roughness} in
+    (current_material_name_list, new_material :: (List.tl current_material_list))
+  else if String.sub line 0 3 = "Pm " then
+    (**Metallicity*)
+    let metallic = Scanf.sscanf line "Pm %f" ( fun m -> m ) in
+    (**NOTE/todo: the Fresnel computation requires we already know base color - this is
+      fine for Blender exported mtl but maybe not for others*)
+    let base_color = (List.hd current_material_list).base_color in
+    let new_material = {(List.hd current_material_list) with metallic = metallic; fresnel = compute_fresnel metallic base_color} in
     (current_material_name_list, new_material :: (List.tl current_material_list))
   else if String.sub line 0 2 = "d " then
     (**Opacity - straight copy*)
