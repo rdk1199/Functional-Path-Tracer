@@ -18,7 +18,7 @@ type scene = {
   ambient_color : Math.Color.color;
 }
 
-let create_scene triangles triangle_materials bvh materials background_color =
+let create_scene triangles triangle_materials spheres sphere_materials bvh materials background_color =
   let emissive_triangles = 
     triangles
     |> List.mapi (fun i _triangle ->
@@ -28,8 +28,8 @@ let create_scene triangles triangle_materials bvh materials background_color =
     |> List.filter_map (fun x -> x)
   in
   {
-    spheres = [];
-    sphere_materials = [];
+    spheres = spheres;
+    sphere_materials = sphere_materials;
 
     triangles = Iarray.of_list triangles;
     triangle_materials = Iarray.of_list triangle_materials;

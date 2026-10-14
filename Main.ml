@@ -31,14 +31,44 @@ let camera_up = {x = 0.0; y = 0.0; z = 2.0;}
 let focal_length = 1.0
 let fov = 90.0
 
+let sphere_center = {x = 0.0; y = -1.5; z = 1.0}
+let sphere_radius = 0.25
+
+let glass_ball = {
+  center = sphere_center;
+  radius = sphere_radius;
+}
+
+let glass = {
+  name = "glass";
+  base_color = {r = 0.0; g = 0.0; b = 0.0};
+  shininess = 1.0;
+  refractive_index = 1.5;
+  metallic = 1.0;
+  opacity = 0.0;
+  emissive = {r = 0.0; g = 0.0; b =0.0};
+  fresnel = {r = 0.04; g = 0.04; b = 0.04};
+} 
+
+
 let camera = create_camera camera_pos camera_forward camera_up width height focal_length fov
 
 let (triangle_list, triangle_materials, material_name_list) = parse_obj "ModelFiles/GlassCornellBox.obj"
-let material_list = IO.MtlParser.parse_mtl_file "ModelFiles/GlassCornellBox.mtl" material_name_list
+let tri_material_list = IO.MtlParser.parse_mtl_file "ModelFiles/GlassCornellBox.mtl" material_name_list
+
+let spheres = [glass_ball]
+
+let sphere_material_list = [glass]
+
+let all_material_list = tri_material_list @ sphere_material_list
+
+let sphere_materials = [List.length tri_material_list]
+
+
 let () = print_endline "Parsed obj and mtl!"
 
 
-let scene = create_scene triangle_list triangle_materials (build_bvh triangle_list triangle_materials) material_list Math.Color.black
+let scene = create_scene triangle_list triangle_materials spheres sphere_materials  (build_bvh triangle_list triangle_materials) all_material_list Math.Color.black
 let () = print_endline "defined camera and scene"
 
 let rec draw_scene_rec camera scene x y image r_gen accumulator num_samples avg_depth =
@@ -81,7 +111,15 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_refract_accumulate 2 5
+(*
+let rgen = Math.Random.create_pcg_32_gen 0 1
+let px_color , _ = RenderingLib.Render.accumulate_pixel camera scene 400 400 10 RenderingLib.Accumulator.mis_ggx_refract_accumulate 1 rgen 
+
+let () = print_endline (string_of_color px_color)
+*)
+
+
+let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_refract_accumulate 5 5
 
 let duration = Unix.gettimeofday() -. start_float
 

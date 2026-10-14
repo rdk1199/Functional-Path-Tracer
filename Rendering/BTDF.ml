@@ -11,10 +11,9 @@ let refractive_btdf material new_ior old_ior normal transmit_dir view_dir =
   let transmissivity = (1.0 -. material.opacity) |*.| Math.Color.ones in
   let denom = positive_dot (~-|normal) transmit_dir in
   let half_vector = Math.Geometry.normalized_half_vector (old_ior *.| view_dir) (new_ior *.| transmit_dir) in
-  let fresnel_term = Math.Geometry.fresnel_term material.fresnel view_dir half_vector in
+  let _fresnel_term = Math.Geometry.fresnel_term material.fresnel view_dir half_vector in
   if denom < Math.Util.epsilon then
     Math.Color.black
   else
-    (**TODO: add fresnel term?*)
-    (1.0/.denom) *. radiance_scaling_factor |*.| transmissivity |*| fresnel_term 
+    (1.0/.denom) *. radiance_scaling_factor |*.| transmissivity
 

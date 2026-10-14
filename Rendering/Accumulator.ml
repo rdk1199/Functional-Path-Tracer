@@ -288,7 +288,7 @@ in  mis_ggx_accumulate_rec ray scene stop_prob gen
 
 (**compute possibility of a transmission ray instead of reflection ray, based on opacity*)
 let transmit_prob opacity = 
-  (1.0 -. opacity) *. 0.5
+  (1.0 -. opacity)
 
 (**Cook-Torrance GGX accumulator with multiple importance sampling of lights + BSDF and perfect refractions*)
 let mis_ggx_refract_accumulate ray scene (stop_prob:float) gen =
@@ -297,6 +297,7 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
   let open Math.Vector in
   let open Math.Ray in
   let open Math.Color in
+  (*print_endline (string_of_ray ray);*)
   let scene_hit_info = World.Scene.ray_intersects_scene ray scene in
   if scene_hit_info.hit = false then
     (scene.background_color, gen)
@@ -378,7 +379,7 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
         (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
       else
         (**refract*)
-        let refract_ray = Math.Geometry.refract_ray ray scene_hit_info.normal material.refractive_index in
+        let refract_ray = Math.Geometry.refract_ray ray scene_hit_info.point scene_hit_info.normal (if ray.inside then  1.0 else material.refractive_index) in
         let total_internal_reflect = (Math.Vector.dot refract_ray.direction scene_hit_info.normal > 0.0) in
 
         (**since we're perfectly refracting, the mis weight is just 1.0*)
