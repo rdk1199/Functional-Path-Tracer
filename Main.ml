@@ -3,7 +3,7 @@ open IO.PPMWriter
 open IO.ObjParser
 open Math.Color
 open Math.Random
-open RenderingLib.Camera
+open Rendering.Camera
 open Math.Vector
 open Math.BoundingVolumeHierarchy
 open Math.Ray
@@ -42,7 +42,7 @@ let glass_ball = {
 let glass = {
   name = "glass";
   base_color = {r = 0.0; g = 0.0; b = 0.0};
-  shininess = 1.0;
+  roughness = 0.0;
   refractive_index = 1.5;
   metallic = 1.0;
   opacity = 0.0;
@@ -79,7 +79,7 @@ let rec draw_scene_rec camera scene x y image r_gen accumulator num_samples avg_
     (**finished this row - onto the next*)
     draw_scene_rec camera scene 0 (y+1) image r_gen accumulator num_samples avg_depth
   else begin
-    let accum_color, new_gen = RenderingLib.Render.accumulate_pixel camera scene x y avg_depth accumulator num_samples r_gen in
+    let accum_color, new_gen = Rendering.Render.accumulate_pixel camera scene x y avg_depth accumulator num_samples r_gen in
     set_pixel image accum_color x y;
     draw_scene_rec camera scene (x+1) y image new_gen accumulator num_samples avg_depth
   end
@@ -113,13 +113,13 @@ let start_float = Unix.gettimeofday ()
 
 (*
 let rgen = Math.Random.create_pcg_32_gen 0 1
-let px_color , _ = RenderingLib.Render.accumulate_pixel camera scene 400 400 10 RenderingLib.Accumulator.mis_ggx_refract_accumulate 1 rgen 
+let px_color , _ = Rendering.Render.accumulate_pixel camera scene 400 400 10 Rendering.Accumulator.mis_ggx_refract_accumulate 1 rgen 
 
 let () = print_endline (string_of_color px_color)
 *)
 
 
-let final_image = multithreaded_draw_scene camera scene RenderingLib.Accumulator.mis_ggx_refract_accumulate 5 5
+let final_image = multithreaded_draw_scene camera scene Rendering.Accumulator.mis_ggx_refract_accumulate 5 5
 
 let duration = Unix.gettimeofday() -. start_float
 

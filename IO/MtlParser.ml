@@ -14,11 +14,9 @@ let parse_mtl_line line current_material_name_list current_material_list =
     let new_material = {(List.hd current_material_list) with base_color = base_color} in
     (current_material_name_list, new_material :: (List.tl current_material_list))
   else if String.sub line 0 3 = "Pr " then
-    (**Roughness - convert to shininess*)
-    (**TODO: turn shininess field to roughness in Material record*)
     let roughness = Scanf.sscanf line "Pr %f" ( fun r -> r ) in
     print_endline (string_of_float roughness);
-    let new_material = {(List.hd current_material_list) with shininess = 1.0 -. roughness} in
+    let new_material = {(List.hd current_material_list) with roughness = roughness} in
     (current_material_name_list, new_material :: (List.tl current_material_list))
   else if String.sub line 0 3 = "Pm " then
     (**Metallicity*)

@@ -23,11 +23,10 @@ let ggx_geometric_term view_direction outgoing normal alpha_squared =
   else
     Float.min (numerator/.denom) 1.0
 
-let ggx_spec unit_view unit_light half_vector normal shininess fresnel  =
+let ggx_spec unit_view unit_light half_vector normal roughness fresnel  =
   let open Math.Vector in
   let open Math.Color in
-  (**TODO: storing roughness instead of shininess directly saves a subtraction*)
-  let alpha_squared = (1.0 -. shininess) ** 2.0 in
+  let alpha_squared = roughness ** 2.0 in
   let fresnel_term = Math.Geometry.fresnel_term fresnel unit_light half_vector in
   let geo_term = ggx_geometric_term unit_view unit_light normal alpha_squared in
   let normal_term = ggx_normal_distribution half_vector normal alpha_squared in
@@ -49,7 +48,7 @@ let cook_torrance_brdf view_direction to_light normal material =
   let half_vector = Math.Geometry.normalized_half_vector unit_view unit_light in
   let ks = Math.Geometry.fresnel_term material.fresnel unit_view half_vector in
  
-  let ggx_spec = ggx_spec unit_view unit_light half_vector normal material.shininess material.fresnel in
+  let ggx_spec = ggx_spec unit_view unit_light half_vector normal material.roughness material.fresnel in
   let specular_term = ggx_spec  in
 
   let kd = (Math.Color.ones |-| ks) in

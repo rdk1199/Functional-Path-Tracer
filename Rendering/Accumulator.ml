@@ -7,6 +7,7 @@ let transmit_prob opacity =
   (1.0 -. opacity)
 
 (**Cook-Torrance GGX accumulator with multiple importance sampling of lights + BSDF and perfect refractions*)
+(**TODO: This is pretty messy*)
 let mis_ggx_refract_accumulate ray scene (stop_prob:float) gen =
 (**also carry a flag to determine whether this is an initial ray or reflected ray*)
 let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
@@ -20,7 +21,7 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
     let material = Iarray.get scene.materials scene_hit_info.material_index in
     let emissive = material.emissive in
     let view_dir = ~-|(normalized ray.direction) in
-    let alpha_squared = (1.0 -. material.shininess) ** 2.0 in
+    let alpha_squared = material.roughness ** 2.0 in
     let opacity = material.opacity in
     
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
@@ -48,7 +49,6 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
 
       let light_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir to_light_dir scene_hit_info.normal material in
       let direct_contribution = (1.0/.light_area_prob) *. terminate_weight  *. direct_cos_theta *. mis_light_weight *. geo_term |*.| light_emissive |*| light_cook_torrance_brdf in 
-
 
       let transmit_prob = transmit_prob opacity in
       let reflect_prob = 1.0 -. transmit_prob in

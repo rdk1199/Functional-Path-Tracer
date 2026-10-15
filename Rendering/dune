@@ -1,4 +1,4 @@
   
  (library
-  (name RenderingLib)
+  (name Rendering)
   (libraries math World logs logs.fmt fmt))
