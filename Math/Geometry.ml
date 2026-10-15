@@ -10,10 +10,6 @@ let refract v n old_ior new_ior =
   let open Vector in
   let normalized_v = normalized v in
 
-  (*
-  print_endline ("direction:  " ^ string_of_vector3 normalized_v);
-  print_endline ("normal:  " ^ string_of_vector3 n);
-*)
   let eta = old_ior /. new_ior in
 
   let discriminant = 1.0 -. (eta ** 2.0) *. (1.0 -. ((dot n normalized_v)**2.0)) in
@@ -24,7 +20,6 @@ let refract v n old_ior new_ior =
     eta *.| normalized_v -| normal_component
   else
     (**total internal reflection*)
-    let _ = print_endline "total internal reflection!" in 
     reflect normalized_v n    
 
 let refract_ray old_ray hit_point normal new_ior = 

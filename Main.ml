@@ -31,7 +31,7 @@ let camera_up = {x = 0.0; y = 0.0; z = 2.0;}
 let focal_length = 1.0
 let fov = 90.0
 
-let sphere_center = {x = 0.0; y = -1.5; z = 1.0}
+let sphere_center = {x = -0.4; y = -0.5; z = 0.25}
 let sphere_radius = 0.25
 
 let glass_ball = {
