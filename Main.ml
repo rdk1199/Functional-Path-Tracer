@@ -14,8 +14,6 @@ open World.Light
 open World.Material
 
 let red : color = {r = 255.0; g = 0.0; b = 0.0}
-let black : color = {r = 0.0; g = 0.0; b= 0.0}
-let purple : color = {r = 255.0; g = 0.0; b = 255.0}
 
 let width = 600
 let height = 600

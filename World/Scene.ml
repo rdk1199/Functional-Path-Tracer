@@ -8,14 +8,10 @@ type scene = {
 
   bvh : Math.BoundingVolumeHierarchy.bvh;
 
-  lights : Light.point_light list;
   materials : Material.material Iarray.t;
 
   (**array of indices of triangles with emissive materials, for sampling*)
   emissive_triangles : int Iarray.t;
-
-  background_color : Math.Color.color;
-  ambient_color : Math.Color.color;
 }
 
 let create_scene triangles triangle_materials spheres sphere_materials bvh materials background_color =
@@ -36,12 +32,9 @@ let create_scene triangles triangle_materials spheres sphere_materials bvh mater
 
     bvh = bvh;
 
-    lights = [];
     materials = Iarray.of_list materials;
 
     emissive_triangles = Iarray.of_list emissive_triangles;
-    background_color = background_color;
-    ambient_color = Math.Color.black;
   }
 
 
