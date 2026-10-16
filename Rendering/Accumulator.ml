@@ -8,15 +8,15 @@ let transmit_prob opacity =
 
 (**Cook-Torrance GGX accumulator with multiple importance sampling of lights + BSDF and perfect refractions*)
 (**TODO: This is pretty messy*)
-let mis_ggx_refract_accumulate ray scene (stop_prob:float) gen =
+let ggx_accumulate ray scene (stop_prob:float) gen =
 (**also carry a flag to determine whether this is an initial ray or reflected ray*)
-let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
+let rec ggx_accumulate_rec ray scene (stop_prob:float) gen accum_color multiplier =
   let open Math.Vector in
   let open Math.Ray in
   let open Math.Color in
   let scene_hit_info = World.Scene.ray_intersects_scene ray scene in
   if scene_hit_info.hit = false then
-    (scene.background_color, gen)
+    (accum_color |+| (multiplier |*| scene.background_color), gen)
   else
     let material = Iarray.get scene.materials scene_hit_info.material_index in
     let emissive = material.emissive in
@@ -26,7 +26,7 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
     
     let (stop, gen2) = Math.Random.rand_flip stop_prob gen in
     if stop then
-      (emissive, gen2)
+      (accum_color |+| (multiplier |*| emissive), gen2)
     else
       let terminate_weight = compute_termination_weight stop_prob in
       (**light sample*)
@@ -50,6 +50,8 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
       let light_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir to_light_dir scene_hit_info.normal material in
       let direct_contribution = (1.0/.light_area_prob) *. terminate_weight  *. direct_cos_theta *. mis_light_weight *. geo_term |*.| light_emissive |*| light_cook_torrance_brdf in 
 
+      let accum_color_with_direct = accum_color |+| (multiplier |*| (emissive |+| direct_contribution)) in
+
       let transmit_prob = transmit_prob opacity in
       let reflect_prob = 1.0 -. transmit_prob in
 
@@ -57,7 +59,7 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
 
       if choose_reflect then
         (** reflect *)
-        let (reflect_dir, gen5) = BRDF.cook_torrance_sample gen4 view_dir scene_hit_info.normal alpha_squared in
+        let (reflect_dir, final_gen) = BRDF.cook_torrance_sample gen4 view_dir scene_hit_info.normal alpha_squared in
 
         (**both the normal and sampled ray are normalized already, so can dot to get the cos theta*)
         let reflect_ray = {
@@ -78,11 +80,8 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
             0.0
         in
 
-        let (reflect_color, final_gen) = mis_ggx_refract_accumulate_rec reflect_ray scene stop_prob gen5 in
         let indirect_cos_theta = Math.Vector.positive_dot reflect_dir scene_hit_info.normal in
-
         let reflect_cook_torrance_brdf = BRDF.cook_torrance_brdf view_dir reflect_dir scene_hit_info.normal material in
-
         let adjusted_reflect_ct_sample_prob = 
           if reflect_cook_torrance_sample_prob < Math.Util.epsilon then
             Math.Util.epsilon
@@ -90,20 +89,20 @@ let rec mis_ggx_refract_accumulate_rec ray scene (stop_prob:float) gen =
             reflect_cook_torrance_sample_prob
         in
 
-        let indirect_contribution = (1.0/.reflect_prob) *. (1.0 /. adjusted_reflect_ct_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| reflect_cook_torrance_brdf |*| reflect_color in
-        (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
+        let new_multiplier = (1.0/.reflect_prob) *. (1.0 /. adjusted_reflect_ct_sample_prob) *. terminate_weight *. indirect_cos_theta *. mis_cos_sample_weight |*.| reflect_cook_torrance_brdf |*| multiplier in
+
+        ggx_accumulate_rec reflect_ray scene stop_prob final_gen accum_color_with_direct new_multiplier
       else
         (**refract*)
         let refract_ray = Math.Geometry.refract_ray ray scene_hit_info.point scene_hit_info.normal (if ray.inside then  1.0 else material.refractive_index) in
         let total_internal_reflect = (Math.Vector.dot refract_ray.direction scene_hit_info.normal > 0.0) in
 
         (**since we're perfectly refracting, the mis weight is just 1.0*)
-
-        let (refract_color, final_gen) = mis_ggx_refract_accumulate_rec refract_ray scene stop_prob gen4 in
-
+  
         let indirect_cos_theta = if total_internal_reflect then Math.Vector.dot refract_ray.direction scene_hit_info.normal else Math.Vector.dot refract_ray.direction ~-|(scene_hit_info.normal) in
         let refract_btdf = BTDF.refractive_btdf material refract_ray.refractive_index ray.refractive_index scene_hit_info.normal refract_ray.direction view_dir in
-        let indirect_contribution = (1.0 /. transmit_prob) *. terminate_weight *. indirect_cos_theta |*.| refract_btdf |*|  refract_color in
-        (emissive |+| direct_contribution |+| indirect_contribution, final_gen)
-in  mis_ggx_refract_accumulate_rec ray scene stop_prob gen
 
+        let new_multiplier = (1.0 /. transmit_prob) *. terminate_weight *. indirect_cos_theta |*.| refract_btdf |*| multiplier in
+        ggx_accumulate_rec refract_ray scene stop_prob gen4 accum_color_with_direct new_multiplier
+  
+in  ggx_accumulate_rec ray scene stop_prob gen Math.Color.black Math.Color.ones

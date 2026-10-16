@@ -111,20 +111,12 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-(*
-let rgen = Math.Random.create_pcg_32_gen 0 1
-let px_color , _ = Rendering.Render.accumulate_pixel camera scene 400 400 10 Rendering.Accumulator.mis_ggx_refract_accumulate 1 rgen 
-
-let () = print_endline (string_of_color px_color)
-*)
-
-
-let final_image = multithreaded_draw_scene camera scene Rendering.Accumulator.mis_ggx_refract_accumulate 5 5
+let final_image = multithreaded_draw_scene camera scene Rendering.Accumulator.ggx_accumulate 5 5
 
 let duration = Unix.gettimeofday() -. start_float
 
 let () = print_endline ("render time: " ^ (string_of_float duration) ^ " s")
 
-let file_name = "mt_cornell_box_ggx_refract_glass_mis_check.ppm"
+let file_name = "mt_cornell_box_ggx_refract_glass_tail_rec_check.ppm"
 let _ = image_to_ppm final_image file_name
 

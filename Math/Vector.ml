@@ -52,7 +52,6 @@ let vector3_pointwise_fun v1 v2 f = {
 let vector3_min v1 v2 = vector3_pointwise_fun v1 v2 Float.min
 let vector3_max v1 v2 = vector3_pointwise_fun v1 v2 Float.max
 
-
 let is_nan_vector v = (Float.is_nan v.x) || (Float.is_nan v.y) || (Float.is_nan v.z)
 
 let dot v1 v2 = v1.x *. v2.x +. v1.y *. v2.y +. v1.z *. v2.z
