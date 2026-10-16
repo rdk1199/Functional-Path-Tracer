@@ -112,26 +112,3 @@ let ray_intersects_scene ray scene =
       bvh_hit
     else
       sphere_hit
-
-
-(**(**keep around for testing with/without acceleration structures*)
-let ray_intersects_scene ray scene = 
-  let open Math.Vector in
-  let default_scene_hit = {hit = false; 
-                           t = 0.0; 
-                           point = {x = 0.0; y = 0.0; z=0.0}; 
-                           normal = {x = 0.0; y =0.0; z=0.0}; 
-                           material_index = 0} in
-  let sphere_hit = ray_intersects_scene_spheres_rec ray scene scene.spheres default_scene_hit 0 in
-  let triangle_hit = ray_intersects_scene_triangles_rec ray scene scene.triangles default_scene_hit 0 in
-
-  if not sphere_hit.hit then
-    triangle_hit
-  else if not triangle_hit.hit then 
-    sphere_hit
-  else
-    if triangle_hit.t < sphere_hit.t then
-      triangle_hit
-    else
-      sphere_hit
-*)
