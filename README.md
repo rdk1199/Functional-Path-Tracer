@@ -1,6 +1,6 @@
 A (supposedly) physically accurate path tracer written entirely in OCaml, using functional programming only (with some exceptions for I/O). 
 Just meant to be my own quick introduction to FP/OCaml - not a super fully featured renderer.
-No command line I/O, so the image size, number of samples, files, etc. have to be specified manually in Main.ml
+No command line I/O, so the image size, number of samples, files, etc. have to be specified manually in Main.ml.
 Supports obj/mtl files with no face coordinates or normals.
 
 Reflections use the Cook-Torrance reflectance model with the GGX normal distribution function. Perfect refraction only (i.e. no nontrivial BTDF)
