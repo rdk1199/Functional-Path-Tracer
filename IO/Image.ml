@@ -21,7 +21,6 @@ let set_pixel image color x y =
 
 let create_image width height color =
   {width = width; height = height; data = Array.make (width * height) color}
-  let () = Logs.info (fun m-> m "Finished creating image\n")
 
 (**non-functional!*)
 let average_combine_images image_list = 

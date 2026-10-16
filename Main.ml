@@ -13,10 +13,6 @@ open World.Scene
 open World.Light
 open World.Material
 
-let _ =
-  Logs.set_reporter (Logs_fmt.reporter ());
-  Logs.set_level (Some Logs.Info) (* Set global log level filter *)
-
 let red : color = {r = 255.0; g = 0.0; b = 0.0}
 let black : color = {r = 0.0; g = 0.0; b= 0.0}
 let purple : color = {r = 255.0; g = 0.0; b = 255.0}
@@ -31,7 +27,7 @@ let camera_up = {x = 0.0; y = 0.0; z = 2.0;}
 let focal_length = 1.0
 let fov = 90.0
 
-let sphere_center = {x = -0.4; y = -0.5; z = 0.25}
+let sphere_center = {x = -0.4; y = -0.5; z = 0.35}
 let sphere_radius = 0.25
 
 let glass_ball = {
@@ -111,7 +107,7 @@ let multithreaded_draw_scene camera scene accumulator samples_per_thread avg_dep
 
 let start_float = Unix.gettimeofday ()
 
-let final_image = multithreaded_draw_scene camera scene Rendering.Accumulator.ggx_accumulate 5 5
+let final_image = multithreaded_draw_scene camera scene Rendering.Accumulator.ggx_accumulate 50 5
 
 let duration = Unix.gettimeofday() -. start_float
 
